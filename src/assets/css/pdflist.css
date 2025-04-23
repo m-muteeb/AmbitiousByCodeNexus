@@ -1,0 +1,32 @@
+.pdf-list-container {
+    padding: 2rem;
+    background: #f7f9fc;
+  }
+  
+  .title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+  }
+  
+  .filters {
+    display: flex;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .pdf-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+  
+  .pdf-card {
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  
+  .pdf-actions {
+    margin-top: 1rem;
+  }
+  

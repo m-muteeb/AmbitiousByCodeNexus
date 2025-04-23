@@ -1,0 +1,49 @@
+.contactForm{
+    padding: 100px 0px;
+}
+.contactForm p{
+    padding-right: 50px; 
+}
+
+.btn4{ 
+    color: #fff;
+    background-color:  #1d3557;
+    font-weight: 600;
+    padding: 14px 41px;
+    border: none;
+    border-radius: 0;
+    text-transform: uppercase;
+    font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}  
+.btn4:hover {
+    background-color: #AE845F;
+}
+
+@media (max-width: 576px){
+    .contactform{
+        padding: 0px 20px;
+    }
+    .contactForm{
+        padding: 50px 0px;
+    }
+    .contactForm h1{
+        text-align: center;
+    }
+    .contactForm p{
+        padding: 0px 20px;
+        text-align: center;
+    }
+    .btn-container {
+        display: flex;
+        justify-content: center; /* Center the button horizontally */
+        margin-top: 20px; /* Add some margin for spacing */
+    }
+    h2{
+        padding: 0px 10px;
+    }
+    iframe{
+        padding: 0px 10px;
+    }
+   
+  }

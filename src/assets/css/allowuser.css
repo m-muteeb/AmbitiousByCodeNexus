@@ -1,0 +1,70 @@
+.admin-user-list {
+  padding: 2rem;
+  max-width: 1800px;
+  margin: auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.page-title {
+  color: #003f88;
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.user-table-wrapper {
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.user-table th, .user-table td {
+  padding: 0.75rem;
+  text-align: center;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.user-table th {
+  background-color: #f0f4f8;
+  color: #003f88;
+  font-weight: 600;
+}
+
+.institution-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.make-admin-btn {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #003f88;
+  color: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.3s ease;
+}
+
+.make-admin-btn:disabled {
+  background-color: #bbb;
+  cursor: not-allowed;
+}
+
+.role-tag.admin {
+  color: green;
+  font-weight: bold;
+}
+
+.role-tag.user {
+  color: #555;
+}

@@ -1,0 +1,30 @@
+/* Subject Notes Page Styling */
+.notes-detail-container {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .notes-sections {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .notes-card {
+    background-color: #dddee0;
+    padding: 20px;
+    border-radius: 10px;
+    width: 200px;
+    text-align: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0px 25px 30px rgba(0, 0, 0, 0.2);
+  }
+  
+  .notes-card:hover {
+    background-color: #28a745;
+    color: white;
+  }
+  

@@ -1,0 +1,38 @@
+h1 {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+p {
+    font-size: 18px;
+    padding: 0 0 0 0;
+}
+
+.tracks .project-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #fff;
+    border-radius: 8px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+    padding: 4px;
+    padding-bottom: 10px;
+    transition: transform 0.3s ease-out;
+}
+
+.tracks .project-card:hover {
+    transform: scale(1.05);
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+}
+
+.tracks .project-card .project-image {
+    height: 200px;
+    object-fit: cover;
+}
+
+.tracks .project-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+

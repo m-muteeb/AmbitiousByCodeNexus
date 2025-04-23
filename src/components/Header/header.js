@@ -1,0 +1,86 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaRegBell, FaBars, FaTimes } from "react-icons/fa";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../../config/firebase"; // Make sure path is correct
+import "../../assets/css/header.css";
+import logo from "../../assets/images/Ambitious logo .jpg";
+
+export default function Header() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  // Track user auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Handle logout
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate("/");
+  };
+
+  return (
+    <header className="header">
+      <div className="container">
+        {/* Logo & Website Name */}
+        <div className="logo-container">
+          <img src={logo} alt="Logo" className="logo" />
+          <span className="site-name">Ambitious</span>
+        </div>
+
+        {/* Navigation */}
+        <nav className="nav-links">
+          <Link to="/">Home</Link>
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact Us</Link>
+          <Link to="/institutionpage">Paid Test Series</Link>
+        </nav>
+
+        {/* Right Section */}
+        <div className="right-section">
+          {!user ? (
+            <Link to="/login">
+              <button className="sign-in-btn">Login</button>
+            </Link>
+          ) : (
+            <button onClick={handleLogout} className="sign-in-btn">
+              Logout
+            </button>
+          )}
+          <FaRegBell className="bell-icon" />
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button className="menu-btn" onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <FaTimes /> : <FaBars />}
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="mobile-menu">
+          <Link to="/">Home</Link>
+          <Link to="/about">About Us</Link>
+          <Link to="/services">Our Services</Link>
+          <Link to="/contact">Contact Us</Link>
+          {!user && <Link to="/*">Login</Link>}
+          {!user ? (
+            <Link to="/register">
+              <button className="sign-in-btn">Sign Up</button>
+            </Link>
+          ) : (
+            <button onClick={handleLogout} className="sign-in-btn">
+              Logout
+            </button>
+          )}
+        </div>
+      )}
+    </header>
+  );
+}

@@ -1,0 +1,150 @@
+.testimonial-section {
+    text-align: center;
+    padding: 2.5rem;
+    background-color: #f4f4f4;
+}
+
+.testimonial-section h2 {
+    font-size: 2rem;
+    font-family: Georgia, serif;
+    margin-bottom: 2rem;
+    color: #333;
+}
+
+.testimonial-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.testimonial-card {
+    background-color: #fff;
+    color: #000;
+    padding: 1.9rem;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 280px;
+    text-align: left;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-10px);
+}
+
+.testimonial-card p {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: #000;
+}
+
+.testimonial-card h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #1d3557;
+    font-weight: bold;
+}
+
+.testimonial-card span {
+    font-size: 0.8rem;
+    color: #000;
+}
+
+.avatar {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 50px;
+    height: 50px;
+    border: 3px solid #ffbb33;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.testimonial-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.nav-button {
+    background-color: #ffbb33;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    margin: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.nav-button:hover {
+    background-color: #e0a828;
+}
+
+.nav-button svg {
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .testimonial-cards {
+        gap: 1.5rem;
+    }
+
+    .testimonial-card {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+    .testimonial-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .testimonial-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .testimonial-card {
+        max-width: 100%;
+    }
+
+    .testimonial-nav .nav-button {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .testimonial-cards {
+        gap: 2rem;
+    }
+
+    .testimonial-card {
+        max-width: 350px;
+    }
+
+    .testimonial-avatars .avatar {
+        width: 70px;
+        height: 70px;
+    }
+}
