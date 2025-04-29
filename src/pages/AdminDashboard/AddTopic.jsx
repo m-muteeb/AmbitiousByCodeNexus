@@ -23,6 +23,14 @@ import "../../assets/css/addtopic.css";
 const { Option } = Select;
 
 const AddContent = () => {
+
+  const contentTypes = [
+    { label: "📖 Book Lessons", value: "book-lessons" },
+    { label: "📝 MCQs", value: "mcqs" },
+    { label: "📜 Past Papers", value: "past-papers" },
+    { label: "📜 Kamiyab Series", value: "kamiyab-series" }, // use lowercase for consistency
+  ];
+  
   const navigate = useNavigate();
   const editor = useRef(null);
   const [description, setDescription] = useState("");
@@ -31,7 +39,7 @@ const AddContent = () => {
   const [addingClass, setAddingClass] = useState(false);
   const [newClass, setNewClass] = useState("");
   const [isPaid, setIsPaid] = useState(false); // Toggle for paid content
-  const [subject, setSubject] = useState(""); // For subject input
+  // const [subject, setSubject] = useState(""); // For subject input
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -57,8 +65,8 @@ const AddContent = () => {
     const {
       topic,
       class: selectedClasses,
-      category,
-      subCategory,
+      subject,
+      contentType,
       file,
     } = values;
 
@@ -89,7 +97,9 @@ const AddContent = () => {
                 reject(error);
               },
               async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                const downloadURL = await getDownloadURL(
+                  uploadTask.snapshot.ref
+                );
                 const fileName = fileItem.name;
                 fileUrls.push({ url: downloadURL, fileName });
                 resolve();
@@ -104,14 +114,15 @@ const AddContent = () => {
       const topicData = {
         topic: topic || "",
         class: selectedClasses.join(", "),
-        category: category || "",
-        subCategory: subCategory || "",
+        subject: (subject || "").trim().toLowerCase(), // keep only this one
+        contentType: contentType || "",
         description: description || "",
         fileUrls,
-        subject: subject || "",
         isPaid: isPaid,
         timestamp: new Date(),
       };
+      console.log("Topic Data:", topicData);
+      
 
       await addDoc(collection(fireStore, "topics"), topicData);
 
@@ -124,7 +135,7 @@ const AddContent = () => {
       form.resetFields();
       setDescription("");
       setIsPaid(false);
-      setSubject("");
+      // setSubject("");
     } catch (e) {
       console.error("Error saving topic:", e);
       message.error("Failed to save topic.", 3);
@@ -160,7 +171,12 @@ const AddContent = () => {
         bordered={false}
         style={{ margin: "20px auto", width: "100%", borderRadius: "10px" }}
       >
-        <Form layout="vertical" onFinish={onFinish} autoComplete="off" form={form}>
+        <Form
+          layout="vertical"
+          onFinish={onFinish}
+          autoComplete="off"
+          form={form}
+        >
           <Form.Item label="Topic Name" name="topic">
             <Input placeholder="Enter topic name" />
           </Form.Item>
@@ -176,7 +192,9 @@ const AddContent = () => {
               dropdownRender={(menu) => (
                 <>
                   {menu}
-                  <div style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}>
+                  <div
+                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
+                  >
                     <Input
                       style={{ flex: "auto" }}
                       placeholder="Add new class"
@@ -186,7 +204,9 @@ const AddContent = () => {
                     />
                     <Button
                       type="primary"
-                      icon={addingClass ? <LoadingOutlined /> : <PlusOutlined />}
+                      icon={
+                        addingClass ? <LoadingOutlined /> : <PlusOutlined />
+                      }
                       onClick={handleAddClass}
                     >
                       {addingClass ? "Adding..." : "Add"}
@@ -203,12 +223,26 @@ const AddContent = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Category" name="category">
-            <Input placeholder="Enter category" />
+          <Form.Item label="Subject" name="subject">
+            <Input placeholder="Enter your subject" />
+          </Form.Item>
+          <Form.Item
+            label="Content Type"
+            name="contentType"
+            rules={[
+              { required: true, message: "Please select a content type!" },
+            ]}
+          >
+            <Select placeholder="Select a content type">
+              {contentTypes.map((type) => (
+                <Option key={type.value} value={type.value}>
+                  {type.label}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
 
           {/* Show subject only when isPaid is true */}
-          
 
           <Form.Item label="Description" name="description">
             <Input.TextArea
@@ -235,9 +269,12 @@ const AddContent = () => {
           </Form.Item>
 
           <Form.Item label="Upload as Paid Content">
-            <Switch checked={isPaid} onChange={(checked) => setIsPaid(checked)} />
+            <Switch
+              checked={isPaid}
+              onChange={(checked) => setIsPaid(checked)}
+            />
           </Form.Item>
-          {isPaid && (
+          {/* {isPaid && (
             <Form.Item label="Subject" name="subject">
               <Input
                 placeholder="Enter subject"
@@ -245,7 +282,7 @@ const AddContent = () => {
                 onChange={(e) => setSubject(e.target.value)}
               />
             </Form.Item>
-          )}
+          )} */}
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block disabled={uploading}>
@@ -254,7 +291,11 @@ const AddContent = () => {
           </Form.Item>
 
           <Form.Item>
-            <Button type="default" block onClick={() => navigate('/dashboard/ManageProducts')}>
+            <Button
+              type="default"
+              block
+              onClick={() => navigate("/dashboard/manageContent")}
+            >
               Manage Topics
             </Button>
           </Form.Item>

@@ -5,8 +5,16 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import "../../assets/css/notes.css";
 
 const subjects = [
-  "Urdu", "English", "Math", "Islamiyat", "Biology",
-  "Physics", "Chemistry", "Computer", "Tarjma tul Quran", "Pak Studies"
+  "urdu",
+  "english",
+  "math",
+  "islamiyat",
+  "biology",
+  "physics",
+  "chemistry",
+  "computer",
+  "tarjma tul Quran",
+  "pak Studies",
 ];
 
 // // Image URLs for each subject
@@ -27,7 +35,7 @@ const contentTypes = [
   { label: "📖 Book Lessons", value: "book-lessons" },
   { label: "📝 MCQs", value: "mcqs" },
   { label: "📜 Past Papers", value: "past-papers" },
-  { label: "📜 Kamiyab Series", value: "Kamiyab-Series" }
+  { label: "📜 Kamiyab Series", value: "Kamiyab-Series" },
 ];
 
 const Notes = () => {
@@ -41,7 +49,9 @@ const Notes = () => {
   // Sync state with URL
   useEffect(() => {
     if (subject) {
-      const subjectId = subjects.findIndex(s => s.toLowerCase() === subject.toLowerCase());
+      const subjectId = subjects.findIndex(
+        (s) => s.toLowerCase() === subject.toLowerCase()
+      );
       setOpenSubjectId(subjectId >= 0 ? subjectId : null);
     }
     if (contentType && subject) {
@@ -53,18 +63,29 @@ const Notes = () => {
   const fetchTopics = async (subject, contentType) => {
     setLoading(true);
     try {
-      console.log("Fetching topics for subject:", subject, "and contentType:", contentType);
+      console.log(
+        "Fetching topics for subject:",
+        subject,
+        "and contentType:",
+        contentType
+      );
       const q = query(
         collection(fireStore, "topics"),
         where("class", "==", selectedClass),
-        where("subject", "==", subject),
-        where("contentType", "==", contentType)
+        where("subject", "==", subject.trim().toLowerCase()),
+        where("contentType", "==", contentType.trim().toLowerCase())
       );
 
       console.log("Fetching topics with query:", q);
+      console.log("Selected Class:", selectedClass);
+      console.log("Subject (raw):", subject);
+      console.log("Subject (trimmed):", subject.trim().toLowerCase());
+      console.log("Content Type (raw):", contentType);
+      console.log("Content Type (trimmed):", contentType.trim().toLowerCase());
+
       const snapshot = await getDocs(q);
       const topicData = {};
-      snapshot.forEach(doc => {
+      snapshot.forEach((doc) => {
         const data = doc.data();
         if (data.topic) topicData[data.topic] = data.fileUrls || [];
       });
@@ -77,19 +98,23 @@ const Notes = () => {
   };
 
   const handleSubjectClick = (subjectName, index) => {
+    console.log(
+      "Current openSubjectId:",
+      openSubjectId,
+      "Clicked index:",
+      index
+    );
+    const newOpenId = openSubjectId === index ? null : index;
+    console.log("Setting new openSubjectId:", newOpenId);
 
-    console.log('Current openSubjectId:', openSubjectId, 'Clicked index:', index);
-  const newOpenId = openSubjectId === index ? null : index;
-  console.log('Setting new openSubjectId:', newOpenId);
-  
     setOpenSubjectId(newOpenId);
-    
+
     if (newOpenId !== null) {
       navigate(`/notes/${selectedClass}/${subjectName.toLowerCase()}`);
     } else {
       navigate(`/notes/${selectedClass}`);
     }
-    
+
     if (openSubjectId !== index) {
       setActiveContentType(null);
       setTopics({});
@@ -111,41 +136,53 @@ const Notes = () => {
     <div className="notes-container">
       <main>
         <h2>Welcome to Our Educational Portal</h2>
-        <p className="intro-text text-center py-3 fw-bold">Our goal is to provide high-quality educational resources.</p>
+        <p className="intro-text text-center py-3 fw-bold">
+          Our goal is to provide high-quality educational resources.
+        </p>
 
         <div className="subjects-grid">
           {subjects.map((subjectName, index) => (
-            <div 
+            <div
               key={index}
-              className={`subject-card ${openSubjectId === index ? 'active' : ''}`}
+              className={`subject-card ${
+                openSubjectId === index ? "active" : ""
+              }`}
               data-testid={`subject-card-${index}`}
             >
-              <div 
+              <div
                 className="subject-header"
                 onClick={() => handleSubjectClick(subjectName, index)}
               >
                 <span>{subjectName}</span>
-                <span>{openSubjectId === index ? '▼' : '►'}</span>
+                <span>{openSubjectId === index ? "▼" : "►"}</span>
               </div>
 
-              <div className={`dropdown-container ${openSubjectId === index ? 'visible' : ''}`}>
+              <div
+                className={`dropdown-container ${
+                  openSubjectId === index ? "visible" : ""
+                }`}
+              >
                 <div className="dropdown-content">
                   {contentTypes.map(({ label, value }) => (
                     <div key={value}>
-                      <div 
-                        className={`content-type ${activeContentType === value ? 'active' : ''}`}
-                        onClick={() => handleContentTypeClick(subjectName, value)}
+                      <div
+                        className={`content-type ${
+                          activeContentType === value ? "active" : ""
+                        }`}
+                        onClick={() =>
+                          handleContentTypeClick(subjectName, value)
+                        }
                       >
                         {label}
                       </div>
-                      
+
                       {activeContentType === value && (
                         <div className="topics-list">
                           {loading ? (
                             <div className="loading">Loading...</div>
                           ) : Object.keys(topics).length > 0 ? (
                             Object.keys(topics).map((topicName, i) => (
-                              <div 
+                              <div
                                 key={i}
                                 className="topic-item"
                                 onClick={() => handleTopicClick(topicName)}
@@ -171,19 +208,6 @@ const Notes = () => {
 };
 
 export default Notes;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useState, useEffect } from "react";
 // import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -232,7 +256,6 @@ export default Notes;
 //   const [loading, setLoading] = useState(false);
 //   const [openSubject, setOpenSubject] = useState(null); // Track only the currently open subject
 //   const [activeContentType, setActiveContentType] = useState(contentType);
-  
 
 //   // Effect to sync URL params with component state
 //   useEffect(() => {
@@ -287,7 +310,6 @@ export default Notes;
 //     setLoading(false);
 //   };
 
- 
 //   // Handle subject selection - open only one subject at a time
 //   const handleSelectSubject = (subject, index) => {
 //     // Toggle the current subject or select a new one
@@ -340,7 +362,6 @@ export default Notes;
 //       console.error('No file URL found for this topic.');
 //     }
 //   };
-
 
 //   return (
 //     <div className="notes-container">
