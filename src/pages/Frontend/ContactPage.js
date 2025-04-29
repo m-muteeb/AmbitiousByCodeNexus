@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react"; // <-- import useEffect
 import "../../assets/css/contactpage.css";
 
 
-const initialState = { name: "", email: "", website: "", message: "" };
+
 
 const ContactSection = () => {
  
-
+      useEffect(() => {
+        window.scrollTo(0, 0);
+      }, []);
 
   return (
     <div className="container contactForm">

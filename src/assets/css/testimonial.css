@@ -3,12 +3,19 @@
     padding: 2.5rem;
     background-color: #f4f4f4;
 }
+.test{
+    display: inline-block;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 0.5rem;
+    transition: all 0.3s ease-in-out;
+}
 
 .testimonial-section h2 {
     font-size: 2rem;
     font-family: Georgia, serif;
     margin-bottom: 2rem;
     color: #333;
+   
 }
 
 .testimonial-cards {

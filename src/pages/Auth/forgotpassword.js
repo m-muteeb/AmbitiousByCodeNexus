@@ -1,5 +1,5 @@
 // src/components/ForgotPassword.js
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,11 @@ const ForgotPassword = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+   useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
+  
 
   const handleResetPassword = async (e) => {
     e.preventDefault();

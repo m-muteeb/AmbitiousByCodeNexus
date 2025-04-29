@@ -35,17 +35,23 @@ const Footer = () => {
                     height: "2px",
                   }}
                 />
-                <p style={{ textDecoration: "none", color: "black" }} >                 
-                    Notes              
+                <p >  
+                <Link to="/notes" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
+                Notes 
+                  </Link>                 
+                              
                 </p>
-                <p>                 
-                    Past Papers                
-                </p>
-                <p>        
-                    FAQs
+                <p> 
+                <Link to="/faqs" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
+                FAQs
+                  </Link>       
+                 
                 </p>
                 <p>
-                    Privacy Policy
+                <Link to="/privacypolicy" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
+                Privacy Policy
+                  </Link> 
+                  
                 </p>
               </div>
               <div className="col-md-3 col-lg-2 col-xl-2 mx-auto mt-3">
@@ -64,8 +70,8 @@ const Footer = () => {
                   </Link>
                 </p>
                 <p>
-                  <Link to="/about" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
-                    Services
+                  <Link to="/instituionpage" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
+                    Test Series
                   </Link>
                 </p>
                 <p>
@@ -73,11 +79,7 @@ const Footer = () => {
                     Contact Us
                   </Link>
                 </p>
-                <p>
-                  <Link to="/orders" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
-                    Disscussion
-                  </Link>
-                </p>
+              
               </div>
               <div className="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mt-3">
                 <h6 className="text-uppercase fw-bold">Contact</h6>

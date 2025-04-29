@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react"; // <-- import useEffect
 import "../../assets/css/aboutpage.css";
 import AboutImg from "../../assets/images/AboutImg.png";
 import CEO from "../../assets/images/CEO .jpg";
@@ -7,6 +7,11 @@ import img2 from "../../assets/images/stu5.png";
 import img3 from "../../assets/images/stu5.png";
 
 const AboutSection = () => {
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <section className="about-container">
       {/* About Hero Section */}

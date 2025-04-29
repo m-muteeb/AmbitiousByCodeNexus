@@ -22,7 +22,7 @@ const CardSection = () => {
 
   return (
     <div className="featured-container">
-      <h2 className="section-heading text-center text-dark fw-bold mb-4">
+      <h2 className="section-heading text-center text-dark fw-bold mb-5">
         Featured classes
       </h2>
       <div className="featured-section">

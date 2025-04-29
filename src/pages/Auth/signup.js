@@ -1,5 +1,5 @@
 // src/components/SignupPage.js
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db, storage } from '../../config/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,11 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
 
   const handleSignup = async (e) => {
     e.preventDefault();

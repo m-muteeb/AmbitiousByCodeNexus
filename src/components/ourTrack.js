@@ -28,7 +28,7 @@ export default function Project() {
 
     <div className="container">
     <div className='tracks'>
-        <h1 className='text-center mb-2'>Our Tracks</h1>
+        <h1 className='track text-center mb-2'>Our Tracks</h1>
         <p className='text-center mb-5'>Unlock limitless learning opportunities with our expertly curated tracks, designed to empower you with knowledge and skills for success.</p>
      
       <div className="row">

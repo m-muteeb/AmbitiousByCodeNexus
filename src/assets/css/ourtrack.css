@@ -1,6 +1,17 @@
-h1 {
+.tracks{
+    text-align: center;
+   
+}
+
+
+.track {
     font-size: 40px;
     font-weight: bold;
+    /* margin-bottom: 1.5rem; */
+    display: inline-block;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 0.5rem;
+    transition: all 0.3s ease-in-out;
 }
 
 p {
