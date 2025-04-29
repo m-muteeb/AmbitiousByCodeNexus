@@ -34,7 +34,7 @@ export default function Router() {
       />
 
       {/* Auth and Frontend */}
-      <Route path="/" element={<Auth />} />
+      <Route path="/*" element={<Auth />} />
       <Route path="/*" element={<FrontEnd />} />
     </Routes>
   );
