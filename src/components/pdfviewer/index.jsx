@@ -15,12 +15,23 @@ const Preview = () => {
   const queryParams = new URLSearchParams(location.search);
   const fileUrl = queryParams.get("url");
   const fileTitle = queryParams.get("title") || "File Preview";
+  console.log("fileUrl value:", fileUrl);
+console.log("fileUrl typeof:", typeof fileUrl);
+
 
   if (!fileUrl) {
     return <h3 className="text-center text-danger">Invalid File URL</h3>;
   }
 
-  const fileType = fileUrl.split("?")[0].split(".").pop().toLowerCase();
+  let fileType = "";
+
+  if (typeof fileUrl === "string") {
+    fileType = fileUrl.split("?")[0].split(".").pop().toLowerCase();
+    console.log("File Type:", fileType);
+  } else {
+    console.error("fileUrl is not a string:", fileUrl);
+  }
+
   const pdfPlugin = defaultLayoutPlugin();
 
   return (
@@ -41,5 +52,6 @@ const Preview = () => {
     </div>
   );
 };
+
 
 export default Preview;

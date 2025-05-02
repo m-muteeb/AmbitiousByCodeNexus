@@ -17,19 +17,7 @@ const subjects = [
   "pak Studies",
 ];
 
-// // Image URLs for each subject
-// const subjectImages = {
-//   Urdu: "/urdu.png",
-//   English: "/english.png",
-//   Math: "/math.png",
-//   Islamiyat: "/islamiyat.png",
-//   Biology: "/biology.png",
-//   Physics: "/physics.png",
-//   Chemistry: "/chemistry.png",
-//   Computer: "/computer.png",
-//   "Tarjma tul Quran": "/tarjama.png",
-//   "Pak Studies": "/pak studies.png",
-// };
+
 
 const contentTypes = [
   { label: "📖 Book Lessons", value: "book-lessons" },
@@ -127,10 +115,25 @@ const Notes = () => {
     fetchTopics(subjectName, type);
   };
 
+  // const handleTopicClick = (topicName) => {
+  //   const fileUrl = topics[topicName]?.[0]?.url; // ✅ get actual URL string
+  //   if (fileUrl) navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
+  // };
+  
   const handleTopicClick = (topicName) => {
-    const fileUrl = topics[topicName]?.[0];
-    if (fileUrl) navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
+    const fileData = topics[topicName]?.[0];
+  
+    const fileUrl = typeof fileData === "string"
+      ? fileData // case 1: raw URL string
+      : fileData?.url; // case 2: object with a 'url' field
+  
+    if (fileUrl) {
+      navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
+    } else {
+      console.warn("No valid file URL found for topic:", topicName);
+    }
   };
+  
 
   return (
     <div className="notes-container">
