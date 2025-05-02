@@ -61,7 +61,10 @@ const RecentPosts = () => {
       <Row className="justify-content-center mt-1 mb-5 px-3 px-md-5">
         {recentPosts.length > 0 ? (
           recentPosts.map((post) => {
-            const firstFileUrl = post.fileUrls.length > 0 ? post.fileUrls[0] : null;
+            // const firstFileUrl = post.fileUrls.length > 0 ? post.fileUrls[0] : null;
+            const firstFileRaw = post.fileUrls.length > 0 ? post.fileUrls[0] : null;
+            const firstFileUrl = typeof firstFileRaw === 'string' ? firstFileRaw : firstFileRaw?.url;
+
 
             return (
               <div className="col-md-4 mb-4" key={post.topicId} >
