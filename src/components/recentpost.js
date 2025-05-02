@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, limit, where } from 'firebase/firestore';
 import { fireStore } from '../config/firebase';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card, Spinner } from 'react-bootstrap';
@@ -13,16 +13,22 @@ const RecentPosts = () => {
     const fetchRecentPosts = async () => {
       try {
         const querySnapshot = await getDocs(
-          query(collection(fireStore, 'topics'), orderBy('timestamp', 'desc'), limit(9))
+          query(
+            collection(fireStore, 'topics'),
+            where('isPaid', '==', false), // 🧠 Only unpaid items
+            // orderBy('timestamp', 'desc'),
+            limit(9)
+          )
         );
-
+    
         const posts = querySnapshot.docs.map((doc) => {
           const data = doc.data();
-
+          console.log('Fetched data:', data); // Log the fetched data
+    
           const topic = data?.topic || 'Untitled';
           const fileUrls = Array.isArray(data.fileUrls) ? data.fileUrls : [];
           const timestamp = data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000) : null;
-
+    
           return {
             topic,
             fileUrls,
@@ -30,7 +36,7 @@ const RecentPosts = () => {
             topicId: doc.id,
           };
         });
-
+    
         setRecentPosts(posts);
       } catch (error) {
         console.error('Error fetching recent posts:', error);
@@ -38,6 +44,7 @@ const RecentPosts = () => {
         setLoading(false);
       }
     };
+    
 
     fetchRecentPosts();
   }, []);
