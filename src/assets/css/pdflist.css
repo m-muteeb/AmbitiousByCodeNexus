@@ -1,32 +1,118 @@
 .pdf-list-container {
-    padding: 2rem;
-    background: #f7f9fc;
+  padding: 2rem;
+  background: #f7f9fc;
+  margin-top: 48px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pdf-list-container .title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #000;
+}
+
+.pdf-list-container .filters {
+  display: flex;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pdf-list-container .pdf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Class Header */
+.pdf-list-container h2 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #000;
+  padding-bottom: 0.5rem;
+}
+
+/* Subject Header */
+.pdf-list-container h3 {
+  font-size: 1.5rem;
+  color: #1e90ff;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+/* Grid layout for subject cards inside a class */
+.pdf-list-container .subject-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  margin-left: 16px;
+}
+
+/* PDF Card */
+.pdf-list-container .pdf-card {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+
+.pdf-list-container .pdf-card:hover {
+  transform: translateY(-4px);
+}
+
+.pdf-list-container .pdf-card .ant-card-head {
+  background-color: #f0f5ff;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.pdf-list-container .pdf-actions {
+  margin-top: 1rem;
+}
+
+.pdf-list-container .pdf-card p {
+  margin: 0.4rem 0;
+}
+
+.pdf-list-container .pdf-card button {
+  margin-left: 8px;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1400px) {
+  .pdf-list-container .subject-row {
+    grid-template-columns: repeat(4, 1fr);
   }
-  
-  .title {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 2rem;
+}
+
+@media (max-width: 1100px) {
+  .pdf-list-container .subject-row {
+    grid-template-columns: repeat(3, 1fr);
   }
-  
-  .filters {
-    display: flex;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .pdf-list-container {
+    padding: 1rem;
   }
-  
-  .pdf-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+
+  .pdf-list-container .filters {
+    flex-direction: column;
+    align-items: stretch;
   }
-  
-  .pdf-card {
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+
+  .pdf-list-container .subject-row {
+    grid-template-columns: repeat(2, 1fr);
+    margin-left: 0;
   }
-  
-  .pdf-actions {
-    margin-top: 1rem;
+}
+
+@media (max-width: 480px) {
+  .pdf-list-container .subject-row {
+    grid-template-columns: 1fr;
   }
-  
+}

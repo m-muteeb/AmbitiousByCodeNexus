@@ -61,7 +61,7 @@ const PaidContent = () => {
 
           {/* Signup Button */}
           <div style={{ marginTop: "2rem" }}>
-            <Link to="/register">
+            <Link to="/auth/register">
               <button className="sign-in-btn" style={{ padding: "0.75rem 2rem" }}>
                 Sign Up to Access
               </button>
