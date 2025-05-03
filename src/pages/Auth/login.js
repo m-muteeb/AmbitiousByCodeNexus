@@ -80,9 +80,9 @@ const LoginPage = () => {
           </button>
         </form>
         <div style={styles.links}>
-          <Link to="/forgot-password" style={styles.link}>Forgot password?</Link>
+          <Link to="/auth/forgot-password" style={styles.link}>Forgot password?</Link>
           <p style={{ marginTop: '1rem' }}>
-            Don't have an account? <Link to="/register" style={styles.link}>Sign up</Link>
+            Don't have an account? <Link to="/auth/register" style={styles.link}>Sign up</Link>
           </p>
         </div>
       </div>

@@ -45,7 +45,7 @@ export default function Header() {
         {/* Right Section */}
         <div className="right-section">
           {!user ? (
-            <Link to="/login">
+            <Link to="/auth/login">
               <button className="sign-in-btn">Login</button>
             </Link>
           ) : (

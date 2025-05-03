@@ -48,7 +48,7 @@ const PrivateRoute = ({ children, requiredRoles = [] }) => {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/auth/login" replace />;
 
   if (unauthorized) {
     return (

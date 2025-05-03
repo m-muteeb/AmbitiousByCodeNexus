@@ -2,7 +2,7 @@
 import React, { useState , useEffect } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../config/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , Link } from 'react-router-dom';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -25,7 +25,7 @@ const ForgotPassword = () => {
       await sendPasswordResetEmail(auth, email);
       setMessage('Check your inbox for password reset instructions!');
       setTimeout(() => {
-        navigate('/login'); // Redirect to login after message
+        navigate('/auth/login'); // Redirect to login after message
       }, 3000);
     } catch (err) {
       setError('Failed to send password reset email. Please try again.');
@@ -55,7 +55,7 @@ const ForgotPassword = () => {
         </form>
         <div style={styles.links}>
           <p style={{ marginTop: '1rem' }}>
-            Remembered your password? <a href="/login" style={styles.link}>Login</a>
+            Remembered your password? <Link to="/auth/login" style={styles.link}>Login</Link>
           </p>
         </div>
       </div>

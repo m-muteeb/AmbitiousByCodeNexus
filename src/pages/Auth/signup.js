@@ -2,7 +2,7 @@
 import React, { useState , useEffect } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db, storage } from '../../config/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , Link } from 'react-router-dom';
 import { setDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
@@ -141,7 +141,7 @@ const SignupPage = () => {
         
         <div style={styles.links}>
           <p style={{ marginTop: '1rem' }}>
-            Already have an account? <a href="/login" style={styles.link}>Login</a>
+            Already have an account? <Link to="/auth/login" style={styles.link}>Login</Link>
           </p>
         </div>
       </div>
