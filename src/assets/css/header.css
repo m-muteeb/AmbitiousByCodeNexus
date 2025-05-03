@@ -1,146 +1,164 @@
 /* Header.css */
 .header {
-    background: white;
-    font-family: Arial, Helvetica, sans-serif;
-    position: fixed;
-    width: 100%;
-    top: 0;
-    left: 0;
-    z-index: 50;
-  }
+  background: white;
+  font-family: Arial, Helvetica, sans-serif;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 50;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 40px; /* adjust as needed */
   
-  .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-  }
-  
-  .logo-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .logo {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .site-name {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-  }
-  
-  .nav-links {
-    display: flex;
-    gap: 40px;
-  }
-  
-  .nav-links a {
-    text-decoration: none;
-    color: #333;
-    font-weight: 500;
-    font-weight: bold;
-  }
-  
-  .nav-links a:hover {
-    color: #1d3557;
-  }
-  
+}
+
+.site-name {
+  text-decoration: none;
+  color: #333; /* or your desired color */
+  font-size: 20px;
+  font-weight: bold;
+}
+
+
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 35px;
+  height: 35px;
+}
+
+.site-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.nav-links {
+  display: flex;
+  gap: 40px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  font-weight: bold;
+}
+
+.nav-links a:hover {
+  color: #1d3557;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-btn,
+.sign-in-btn {
+  padding: 6px 26px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.search-btn {
+  background: #1d3557;
+  color: white;
+ 
+}
+
+.search-btn:hover {
+  background: #0056b3;
+}
+
+.sign-in-btn {
+ 
+  color: white;
+  background: #1d3557;
+}
+
+.sign-in-btn:hover {
+  background: #007bff;
+  color: white;
+}
+
+.bell-icon {
+  width: 24px;
+  height: 24px;
+  color: #333;
+  cursor: pointer;
+}
+
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: medium;
+}
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  background: white;
+  padding: 15px;
+  position: absolute;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .nav-links,
   .right-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: none;
   }
-  
+
   .search-btn,
   .sign-in-btn {
-    padding: 6px 26px;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 500;
+    padding: 6px 16px;
+    font-size: 14px;
+    border-radius: 15px;
   }
-  
-  .search-btn {
-    background: #1d3557;
-    color: white;
-   
-  }
-  
-  .search-btn:hover {
-    background: #0056b3;
-  }
-  
-  .sign-in-btn {
-   
-    color: white;
-    background: #1d3557;
-  }
-  
-  .sign-in-btn:hover {
-    background: #007bff;
-    color: white;
-  }
-  
-  .bell-icon {
-    width: 24px;
-    height: 24px;
-    color: #333;
-    cursor: pointer;
-  }
-  
+
   .menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: medium;
+    display: block;
   }
-  
+
   .mobile-menu {
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    background: white;
-    padding: 15px;
-    position: absolute;
-    width: 100%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
   }
-  
-  @media (max-width: 768px) {
-    .nav-links,
-    .right-section {
-      display: none;
-    }
-  
-    .search-btn,
-    .sign-in-btn {
-      padding: 6px 16px;
-      font-size: 14px;
-      border-radius: 15px;
-    }
-  
-    .menu-btn {
-      display: block;
-    }
-  
-    .mobile-menu {
-      display: flex;
-    }
-  
-    /* ✅ Add this to match styles from .nav-links a */
-    .mobile-menu a {
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-    }
-  
-    .mobile-menu a:hover {
-      color: #1d3557;
-    }
+
+  /* ✅ Add this to match styles from .nav-links a */
+  .mobile-menu a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
   }
-  
+
+  .mobile-menu a:hover {
+    color: #1d3557;
+  }
+}

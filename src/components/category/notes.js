@@ -34,6 +34,10 @@ const Notes = () => {
   const [openSubjectId, setOpenSubjectId] = useState(null);
   const [activeContentType, setActiveContentType] = useState(contentType);
 
+   useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
+
   // Sync state with URL
   useEffect(() => {
     if (subject) {

@@ -40,7 +40,7 @@ const Hero = () => {
       const match = node.nodeValue.match(regex);
       if (match) {
         const span = document.createElement("span");
-        span.className = "search-target highlight";
+        span.className = "search-target high";
         span.textContent = match[0];
 
         const before = node.nodeValue.slice(0, match.index);

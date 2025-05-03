@@ -44,9 +44,7 @@ const Testimonials = () => {
           <h4>{name}</h4>
           <span>{role}</span>
         </div>
-        <div className="avatar">
-          <img src={image} alt={name} />
-        </div>
+       
       </div>
     ))}
   </div>
