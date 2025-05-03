@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import '../assets/css/faqs.css'; // Adjust the path as necessary
 
 const faqsData = [
@@ -35,6 +35,10 @@ const Faqs = () => {
   const toggleFAQ = (index) => {
     setActiveIndex(index === activeIndex ? null : index);
   };
+
+   useEffect(() => {
+        window.scrollTo(0, 0);
+      }, []);
 
   return (
     <div className="faq-container mb-4 ">

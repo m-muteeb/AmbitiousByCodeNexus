@@ -36,7 +36,7 @@ const Footer = () => {
                   }}
                 />
                 <p >  
-                <Link to="/notes" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
+                <Link to="/notes/${selectedClass}/${subjectName.toLowerCase()}/${type}" className="text-dark" style={{ textDecoration: "none", color: "black" }}>
                 Notes 
                   </Link>                 
                               

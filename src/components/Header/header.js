@@ -22,7 +22,13 @@ export default function Header() {
   // Handle logout
   const handleLogout = async () => {
     await signOut(auth);
+    setIsOpen(false); // Close menu on logout
     navigate("/");
+  };
+
+  // Close menu when a link is clicked
+  const handleLinkClick = () => {
+    setIsOpen(false);
   };
 
   return (
@@ -31,7 +37,7 @@ export default function Header() {
         {/* Logo & Website Name */}
         <div className="logo-container">
           <img src={logo} alt="Logo" className="logo" />
-          <span className="site-name">Ambitious</span>
+          <Link to="/" className="site-name" onClick={handleLinkClick}>Ambitious</Link>
         </div>
 
         {/* Navigation */}
@@ -53,7 +59,6 @@ export default function Header() {
               Logout
             </button>
           )}
-          <FaRegBell className="bell-icon" />
         </div>
 
         {/* Mobile Menu Button */}
@@ -65,12 +70,12 @@ export default function Header() {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="mobile-menu">
-          <Link to="/">Home</Link>
-          <Link to="/about">About Us</Link>
-          <Link to="/contact">Contact Us</Link>
-          {!user && <Link to="/*">Login</Link>}
+          <Link to="/" onClick={handleLinkClick}>Home</Link>
+          <Link to="/about" onClick={handleLinkClick}>About Us</Link>
+          <Link to="/contact" onClick={handleLinkClick}>Contact Us</Link>
+          {!user && <Link to="/login" onClick={handleLinkClick}>Login</Link>}
           {!user ? (
-            <Link to="/register">
+            <Link to="/register" onClick={handleLinkClick}>
               <button className="sign-in-btn">Sign Up</button>
             </Link>
           ) : (
@@ -83,3 +88,8 @@ export default function Header() {
     </header>
   );
 }
+
+
+
+
+
