@@ -7,6 +7,7 @@ import img2 from "../../assets/images/stu5.png";
 import img3 from "../../assets/images/stu5.png";
 
 const AboutSection = () => {
+  const [showHeroMore, setShowHeroMore] = useState(false);
   const [showMore1, setShowMore1] = useState(false);
   const [showMore2, setShowMore2] = useState(false);
   const [showMore3, setShowMore3] = useState(false);
@@ -26,8 +27,16 @@ const AboutSection = () => {
           <h2>About Us</h2>
           <p>
             We are dedicated to providing the best services with a focus on quality and innovation.
+            {showHeroMore && (
+              <>
+                <br />
+                Our commitment drives us to constantly innovate and exceed expectations.
+              </>
+            )}
           </p>
-          <button className="learn-more">Learn More</button>
+          <button className="learn-more" onClick={() => setShowHeroMore(!showHeroMore)}>
+            {showHeroMore ? "View Less" : "View More"}
+          </button>
         </div>
       </div>
 

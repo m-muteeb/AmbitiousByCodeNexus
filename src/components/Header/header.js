@@ -73,9 +73,9 @@ export default function Header() {
           <Link to="/" onClick={handleLinkClick}>Home</Link>
           <Link to="/about" onClick={handleLinkClick}>About Us</Link>
           <Link to="/contact" onClick={handleLinkClick}>Contact Us</Link>
-          {!user && <Link to="/login" onClick={handleLinkClick}>Login</Link>}
+          {/* {!user && <Link to="/login" onClick={handleLinkClick}>Login</Link>} */}
           {!user ? (
-            <Link to="/register" onClick={handleLinkClick}>
+            <Link to="/auth/login" onClick={handleLinkClick}>
               <button className="sign-in-btn">Sign Up</button>
             </Link>
           ) : (
