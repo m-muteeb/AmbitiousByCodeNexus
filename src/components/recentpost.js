@@ -16,7 +16,7 @@ const RecentPosts = () => {
           query(
             collection(fireStore, 'topics'),
             where('isPaid', '==', false), // 🧠 Only unpaid items
-            // orderBy('timestamp', 'desc'),
+            orderBy('timestamp', 'desc'),
             limit(9)
           )
         );
