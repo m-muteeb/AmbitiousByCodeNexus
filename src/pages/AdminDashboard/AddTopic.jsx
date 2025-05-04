@@ -24,12 +24,7 @@ const { Option } = Select;
 
 const AddContent = () => {
 
-  const contentTypes = [
-    { label: "📖 Book Lessons", value: "book-lessons" },
-    { label: "📝 MCQs", value: "mcqs" },
-    { label: "📜 Past Papers", value: "past-papers" },
-    { label: "📜 Kamiyab Series", value: "kamiyab-series" }, // use lowercase for consistency
-  ];
+  
   
   const navigate = useNavigate();
   const editor = useRef(null);
@@ -41,6 +36,10 @@ const AddContent = () => {
   const [isPaid, setIsPaid] = useState(false); // Toggle for paid content
   // const [subject, setSubject] = useState(""); // For subject input
   const [form] = Form.useForm();
+  const [contentTypes, setContentTypes] = useState([]);
+const [newContentType, setNewContentType] = useState("");
+const [addingContentType, setAddingContentType] = useState(false);
+
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -60,6 +59,57 @@ const AddContent = () => {
 
     fetchClasses();
   }, [form]);
+
+  useEffect(() => {
+    const fetchContentTypes = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(fireStore, "contentTypes"));
+        const types = querySnapshot.docs.map((doc) => ({
+          label: doc.data().label,
+          value: doc.data().value,
+        }));
+        setContentTypes(types);
+      } catch (error) {
+        console.error("Failed to fetch content types:", error);
+        message.error("Error loading content types.");
+      }
+    };
+    
+    fetchContentTypes();
+    
+  }
+, []);
+
+
+const handleAddContentType = async () => {
+  if (
+    newContentType &&
+    !contentTypes.some(
+      (type) =>
+        type.label.toLowerCase() === newContentType.toLowerCase() ||
+        type.value.toLowerCase() === newContentType.toLowerCase()
+    )
+  ) {
+    setAddingContentType(true);
+    try {
+      const newType = {
+        label: newContentType,
+        value: newContentType.toLowerCase().replace(/\s+/g, "-"),
+      };
+
+      await addDoc(collection(fireStore, "contentTypes"), newType);
+      setContentTypes([...contentTypes, newType]);
+      setNewContentType("");
+      message.success(`Content type "${newType.label}" added!`);
+    } catch (e) {
+      console.error("Error adding content type:", e);
+      message.error("Failed to add content type.");
+    } finally {
+      setAddingContentType(false);
+    }
+  }
+};
+
 
   const onFinish = async (values) => {
     const {
@@ -227,20 +277,42 @@ const AddContent = () => {
             <Input placeholder="Enter your subject" />
           </Form.Item>
           <Form.Item
-            label="Content Type"
-            name="contentType"
-            rules={[
-              { required: true, message: "Please select a content type!" },
-            ]}
+  label="Content Type"
+  name="contentType"
+  rules={[{ required: true, message: "Please select a content type!" }]}
+>
+  <Select
+    placeholder="Select a content type"
+    dropdownRender={(menu) => (
+      <>
+        {menu}
+        <div style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}>
+          <Input
+            style={{ flex: "auto" }}
+            placeholder="Add new content type"
+            value={newContentType}
+            onChange={(e) => setNewContentType(e.target.value)}
+            onPressEnter={handleAddContentType}
+          />
+          <Button
+            type="primary"
+            icon={addingContentType ? <LoadingOutlined /> : <PlusOutlined />}
+            onClick={handleAddContentType}
           >
-            <Select placeholder="Select a content type">
-              {contentTypes.map((type) => (
-                <Option key={type.value} value={type.value}>
-                  {type.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+            {addingContentType ? "Adding..." : "Add"}
+          </Button>
+        </div>
+      </>
+    )}
+  >
+    {contentTypes.map((type) => (
+      <Option key={type.value} value={type.value}>
+        {type.label}
+      </Option>
+    ))}
+  </Select>
+</Form.Item>
+
 
           {/* Show subject only when isPaid is true */}
 

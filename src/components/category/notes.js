@@ -19,12 +19,12 @@ const subjects = [
 
 
 
-const contentTypes = [
-  { label: "📖 Book Lessons", value: "book-lessons" },
-  { label: "📝 MCQs", value: "mcqs" },
-  { label: "📜 Past Papers", value: "past-papers" },
-  { label: "📜 Kamiyab Series", value: "Kamiyab-Series" },
-];
+// const contentTypes = [
+//   { label: "📖 Book Lessons", value: "book-lessons" },
+//   { label: "📝 MCQs", value: "mcqs" },
+//   { label: "📜 Past Papers", value: "past-papers" },
+//   { label: "📜 Kamiyab Series", value: "Kamiyab-Series" },
+// ];
 
 const Notes = () => {
   const { selectedClass, subject, contentType } = useParams();
@@ -33,6 +33,7 @@ const Notes = () => {
   const [loading, setLoading] = useState(false);
   const [openSubjectId, setOpenSubjectId] = useState(null);
   const [activeContentType, setActiveContentType] = useState(contentType);
+  const [contentTypes, setContentTypes] = useState([]);
 
    useEffect(() => {
       window.scrollTo(0, 0);
@@ -50,8 +51,25 @@ const Notes = () => {
       setActiveContentType(contentType);
       fetchTopics(subject, contentType);
     }
+
+    
   }, [subject, contentType, selectedClass]);
 
+  useEffect(() => {
+    const fetchContentTypes = async () => {
+      try {
+        const q = query(collection(fireStore, "contentTypes"));
+        const snapshot = await getDocs(q);
+        const types = snapshot.docs.map((doc) => doc.data());
+        setContentTypes(types);
+      } catch (error) {
+        console.error("Error fetching content types:", error);
+      }
+    };
+
+    fetchContentTypes();
+  }
+  , []);
   const fetchTopics = async (subject, contentType) => {
     setLoading(true);
     try {
@@ -119,10 +137,7 @@ const Notes = () => {
     fetchTopics(subjectName, type);
   };
 
-  // const handleTopicClick = (topicName) => {
-  //   const fileUrl = topics[topicName]?.[0]?.url; // ✅ get actual URL string
-  //   if (fileUrl) navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
-  // };
+ 
   
   const handleTopicClick = (topicName) => {
     const fileData = topics[topicName]?.[0];
@@ -137,6 +152,8 @@ const Notes = () => {
       console.warn("No valid file URL found for topic:", topicName);
     }
   };
+
+  
   
 
   return (
