@@ -72,6 +72,7 @@ export default function Header() {
         <div className="mobile-menu">
           <Link to="/" onClick={handleLinkClick}>Home</Link>
           <Link to="/about" onClick={handleLinkClick}>About Us</Link>
+          <Link to="/institutionpage" onClick={handleLinkClick}>Paid Test Series</Link>
           <Link to="/contact" onClick={handleLinkClick}>Contact Us</Link>
           {/* {!user && <Link to="/login" onClick={handleLinkClick}>Login</Link>} */}
           {!user ? (
