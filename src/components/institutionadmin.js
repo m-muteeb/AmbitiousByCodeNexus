@@ -89,10 +89,27 @@ const PdfList = () => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     const logoUrl = institution.logoUrl;
-    const logoImageBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
-    const logoImage = logoUrl.toLowerCase().endsWith(".png")
-      ? await pdfDoc.embedPng(logoImageBytes)
-      : await pdfDoc.embedJpg(logoImageBytes);
+    const logoBlob = await fetch(logoUrl).then(res => res.blob());
+    const mimeType = logoBlob.type.toLowerCase();
+
+    let logoImage;
+
+    if (["image/png", "image/jpeg"].includes(mimeType)) {
+      const buffer = await logoBlob.arrayBuffer();
+      logoImage = mimeType === "image/png"
+        ? await pdfDoc.embedPng(buffer)
+        : await pdfDoc.embedJpg(buffer);
+    } else {
+      const imageBitmap = await createImageBitmap(logoBlob);
+      const canvas = document.createElement("canvas");
+      canvas.width = imageBitmap.width;
+      canvas.height = imageBitmap.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(imageBitmap, 0, 0);
+      const pngDataUrl = canvas.toDataURL("image/png");
+      const pngBytes = await fetch(pngDataUrl).then(res => res.arrayBuffer());
+      logoImage = await pdfDoc.embedPng(pngBytes);
+    }
 
     const logoWidth = 200;
     const logoHeight = logoImage.height / logoImage.width * logoWidth;
@@ -161,7 +178,6 @@ const PdfList = () => {
     );
   }
 
-  // Group by class and subject
   const grouped = filteredPdfs.reduce((acc, pdf) => {
     const cls = pdf.class;
     const subj = pdf.subject;
