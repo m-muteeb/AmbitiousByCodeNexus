@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   Button,
@@ -37,6 +38,7 @@ import { getStorage } from "firebase/storage";
 
 
 const ManageContent = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -122,51 +124,51 @@ const ManageContent = () => {
   };
 
 
-const extractStoragePath = (url) => {
-  try {
-    const decodedUrl = decodeURIComponent(url);
-    const pathMatch = decodedUrl.match(/\/o\/(.*?)\?/);
-    return pathMatch ? pathMatch[1] : null;
-  } catch {
-    return null;
-  }
-};
+  const extractStoragePath = (url) => {
+    try {
+      const decodedUrl = decodeURIComponent(url);
+      const pathMatch = decodedUrl.match(/\/o\/(.*?)\?/);
+      return pathMatch ? pathMatch[1] : null;
+    } catch {
+      return null;
+    }
+  };
 
-const handleRemoveFile = async (index, productId) => {
-  const fileData = editingProduct.fileUrls[index];
-  const fileURL = typeof fileData === "string" ? fileData : fileData.url;
-  
-  if (!fileURL || typeof fileURL !== "string") {
-    console.error("Invalid file URL:", fileURL);
-    return;
-  }
+  const handleRemoveFile = async (index, productId) => {
+    const fileData = editingProduct.fileUrls[index];
+    const fileURL = typeof fileData === "string" ? fileData : fileData.url;
 
-  const storagePath = extractStoragePath(fileURL);
-  if (!storagePath) {
-    console.error("Failed to extract storage path from URL:", fileURL);
-    return;
-  }
+    if (!fileURL || typeof fileURL !== "string") {
+      console.error("Invalid file URL:", fileURL);
+      return;
+    }
 
-  const fileRef = ref(storage, storagePath);
+    const storagePath = extractStoragePath(fileURL);
+    if (!storagePath) {
+      console.error("Failed to extract storage path from URL:", fileURL);
+      return;
+    }
 
-  try {
-    // Step 1: Delete file from Firebase Storage
-    await deleteObject(fileRef);
-    console.log("File deleted successfully from Storage");
+    const fileRef = ref(storage, storagePath);
 
-    // Step 2: Update Firestore to remove the file URL
-    const updatedFiles = editingProduct.fileUrls.filter((_, i) => i !== index);
-    const productRef = doc(fireStore, "topics", productId);
+    try {
+      // Step 1: Delete file from Firebase Storage
+      await deleteObject(fileRef);
+      console.log("File deleted successfully from Storage");
 
-    await updateDoc(productRef, { fileUrls: updatedFiles });
-    console.log("File URL removed from Firestore");
+      // Step 2: Update Firestore to remove the file URL
+      const updatedFiles = editingProduct.fileUrls.filter((_, i) => i !== index);
+      const productRef = doc(fireStore, "topics", productId);
 
-    // Step 3: Update local state
-    setEditingProduct((prev) => ({ ...prev, fileUrls: updatedFiles }));
-  } catch (error) {
-    console.error("Error deleting file:", error);
-  }
-};
+      await updateDoc(productRef, { fileUrls: updatedFiles });
+      console.log("File URL removed from Firestore");
+
+      // Step 3: Update local state
+      setEditingProduct((prev) => ({ ...prev, fileUrls: updatedFiles }));
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  };
 
 
   const handleUpdate = async (values) => {
@@ -237,15 +239,15 @@ const handleRemoveFile = async (index, productId) => {
       render: (fileUrls) =>
         fileUrls && fileUrls.length > 0
           ? fileUrls.map((file, index) => {
-              const fileUrl = typeof file === "string" ? file : file.url;
-              return (
-                <div key={index}>
-                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                    View File {index + 1}
-                  </a>
-                </div>
-              );
-            })
+            const fileUrl = typeof file === "string" ? file : file.url;
+            return (
+              <div key={index}>
+                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                  View File {index + 1}
+                </a>
+              </div>
+            );
+          })
           : "No file",
     },
     ,
@@ -278,136 +280,158 @@ const handleRemoveFile = async (index, productId) => {
     },
   ];
 
-  return (
-    <>
-      
-      <div
-        className="container"
-        style={{
-          fontFamily: "Arial, sans-serif",
-        }}
+ return (
+  <>
+    <h2 style={{ textAlign: 'center', paddingBottom: '20px' }}>Manage Products</h2>
+    <div
+      className="container"
+      style={{
+        fontFamily: "Arial, sans-serif",
+        padding: "20px",
+      }}
+    >
+      <Table 
+        dataSource={products} 
+        columns={columns} 
+        rowKey="id" 
+        bordered
+        scroll={{ x: true }}
+      />
+
+      <Modal
+        title="Edit Product"
+        visible={isModalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width={1000}
+        className="responsive-modal"
       >
-        <div className="row">
-          <div className="col-12">
-            <h2 className="page-title py-5 mt-3 text-center">Manage Content</h2>
-
-               <div className="table-responsive">
-          <Table dataSource={products} columns={columns} rowKey="id" bordered />
-        </div>
-
-          </div>
-        </div>
-        
-
-        <Modal
-          title="Edit Product"
-          visible={isModalVisible}
-          onCancel={handleModalClose}
-          footer={null}
-          width={1000}
-          className="responsive-modal"
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleUpdate}
+          className="responsive-form"
         >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleUpdate}
-            className="responsive-form"
-          >
-            <Form.Item label="Topic" name="topic">
-              <Input placeholder="Enter topic" />
-            </Form.Item>
+          <Form.Item label="Topic" name="topic">
+            <Input placeholder="Enter topic" />
+          </Form.Item>
 
-            <Form.Item label="Class" name="class">
-              <Select placeholder="Select class">
-                {classes.map((classOption) => (
-                  <Select.Option key={classOption.id} value={classOption.name}>
-                    {classOption.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
+          <Form.Item label="Class" name="class">
+            <Select placeholder="Select class">
+              {classes.map((classOption) => (
+                <Select.Option key={classOption.id} value={classOption.name}>
+                  {classOption.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
 
-            <Form.Item label="Subject" name="subject">
-              <Input placeholder="Enter subject" />
-            </Form.Item>
+          <Form.Item label="Subject" name="subject">
+            <Input placeholder="Enter subject" />
+          </Form.Item>
 
-            <Form.Item label="Content Type" name="contentType">
-              <Input placeholder="Enter content type" />
-            </Form.Item>
+          <Form.Item label="Content Type" name="contentType">
+            <Input placeholder="Enter content type" />
+          </Form.Item>
 
-            <Form.Item label="Description" name="description">
-              <Input.TextArea placeholder="Enter description" rows={4} />
-            </Form.Item>
+          <Form.Item label="Description" name="description">
+            <Input.TextArea placeholder="Enter description" rows={4} />
+          </Form.Item>
 
-            <Form.Item label="Paid Status" name="isPaid">
-              <Select placeholder="Select status">
-                <Select.Option value={true}>Paid</Select.Option>
-                <Select.Option value={false}>Unpaid</Select.Option>
-              </Select>
-            </Form.Item>
+          <Form.Item label="Paid Status" name="isPaid">
+            <Select placeholder="Select status">
+              <Select.Option value={true}>Paid</Select.Option>
+              <Select.Option value={false}>Unpaid</Select.Option>
+            </Select>
+          </Form.Item>
 
-            <Form.Item label="Uploaded Files">
+          <Form.Item label="Uploaded Files">
             {editingProduct?.fileUrls?.length > 0 ? (
-  editingProduct.fileUrls.map((file, index) => {
-    const fileUrl = typeof file === "string" ? file : file.url;
-    const fileName = typeof file === "string" ? `View File ${index + 1}` : file.fileName;
+              editingProduct.fileUrls.map((file, index) => {
+                const fileUrl = typeof file === "string" ? file : file.url;
+                const fileName = typeof file === "string" ? `View File ${index + 1}` : file.fileName;
 
-    return (
-      <div
-        key={index}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          marginBottom: "8px",
-        }}
-      >
-        <a
-          href={fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ marginRight: "8px" }}
-        >
-          {fileName}
-        </a>
-        <Button
-          type="text"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleRemoveFile(index, editingProduct?.id)}
-        />
-      </div>
-    );
-  })
-) : (
-  <p>No previous files</p>
-)}
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ marginRight: "8px" }}
+                    >
+                      {fileName}
+                    </a>
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleRemoveFile(index, editingProduct?.id)}
+                    />
+                  </div>
+                );
+              })
+            ) : (
+              <p>No previous files</p>
+            )}
 
+            <Upload
+              multiple
+              beforeUpload={(file) => {
+                setNewFiles((prev) => [...prev, file]);
+                return false;
+              }}
+              fileList={newFiles}
+              onRemove={(file) => {
+                setNewFiles((prev) => prev.filter((f) => f !== file));
+              }}
+            >
+              <Button icon={<UploadOutlined />}>Upload Files</Button>
+            </Upload>
+          </Form.Item>
 
-              <Upload
-                multiple
-                beforeUpload={(file) => {
-                  setNewFiles((prev) => [...prev, file]);
-                  return false;
-                }}
-                fileList={newFiles}
-                onRemove={(file) => {
-                  setNewFiles((prev) => prev.filter((f) => f !== file));
-                }}
-              >
-                <Button icon={<UploadOutlined />}>Upload Files</Button>
-              </Upload>
-            </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block loading={loading}>
+              Update
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
 
-            <Form.Item>
-              <Button type="primary" htmlType="submit" block loading={loading}>
-                Update
-              </Button>
-            </Form.Item>
-          </Form>
-        </Modal>
-      </div>
-    </>
-  );
+ {/* add topic page button */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <button
+              className="add-institution-btn"
+              onClick={() => navigate('/dashboard/addcontent')}
+              style={{
+                background: 'linear-gradient(135deg, #4caf50, #81c784)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '10px 25px',
+                color: '#fff',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
+                transition: '0.3s ease',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+            >
+              ➕ Add Topic Page
+            </button>
+          </div>
+  </>
+);
+
+  
 };
 
 export default ManageContent;
