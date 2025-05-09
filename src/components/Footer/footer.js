@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaFacebook, FaTwitter, FaInstagram } from "react-icons/fa";
 import logo from "../../assets/images/Ambitious logo .jpg";
+import "../../assets/css/footer.css";
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -16,13 +17,17 @@ const Footer = () => {
             <div className="row mt-2">
               {/* Logo and description */}
               <div className="col-md-3 col-lg-4 col-xl-3 mx-auto mb-1">
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <img src={logo} width="45" alt="Logo" />
-                  <h1 className="text-dark">Ambitious</h1>
+                <div style={{ display: "flex", alignItems: "flex-center", gap: "10px", marginBottom: "10px" }}>
+                  <div className="footer-image">
+                    <img src={logo} alt="Logo" />
+                  </div>
+
+                  <h3 className="text-dark" style={{ marginTop: '5px' }}>Ambitious</h3>
                 </div>
                 <p className="mb-0 text-dark">
                   Ambitious is an innovative educational platform dedicated to empowering students with high-quality learning resources. We offer engaging courses, interactive quizzes, and expert guidance to help learners achieve academic excellence.
                 </p>
+
               </div>
 
               {/* Features */}

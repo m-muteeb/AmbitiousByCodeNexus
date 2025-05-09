@@ -45,7 +45,7 @@
     font-size: 1rem;
     padding: 8px;
     border-radius: 50px;
-    min-width: 0; /* Prevents overflow */
+    min-width: 0; 
   }
   
   .search-bar .search-bton {
@@ -56,8 +56,8 @@
     border-radius: 30px;
     cursor: pointer;
     transition: background 0.3s;
-    white-space: nowrap; /* Prevents text from wrapping */
-    flex-shrink: 0; /* Prevents button from shrinking */
+    white-space: nowrap; 
+    flex-shrink: 0; 
   }
   
   .search-bar .search-btn:hover {
@@ -93,7 +93,6 @@
   }
   
   
-  /* Hero Image */
   .hero-image img {
     max-width: 570px;
     width: 100%;
@@ -101,7 +100,7 @@
    
   }
   
-  /* Responsive Design */
+ 
   @media (max-width: 992px) {
     .hero {
       flex-direction: column;
@@ -121,3 +120,18 @@
       max-width: 90%;
     }
   }
+
+
+
+
+@media (max-width: 768px) {
+  .hero {
+    padding-bottom: 20px; /* Reduce bottom padding to remove large gap */
+  }
+
+  .hero-image img {
+    margin-bottom: 0; /* Ensure no extra margin below the image */
+    display: block;
+  }
+}
+

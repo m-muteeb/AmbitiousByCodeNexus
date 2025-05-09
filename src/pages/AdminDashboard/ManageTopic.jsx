@@ -406,7 +406,7 @@ const ManageContent = () => {
     </div>
 
  {/* add topic page button */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+       <div style={{ marginTop: '2px', textAlign: 'center', marginBottom: '20px' }}>
             <button
               className="add-institution-btn"
               onClick={() => navigate('/dashboard/addcontent')}
