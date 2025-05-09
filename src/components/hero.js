@@ -115,7 +115,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="hero mt-5 mb-5">
+    <section className="hero mt-5 mb-3">
       <div className="hero-content">
         <h1>
           The <span style={{ color: "orange" }}>Smart</span>{" "}

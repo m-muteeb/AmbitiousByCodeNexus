@@ -1,6 +1,7 @@
-.contactForm{
-    padding: 100px 0px;
+.contactForm {
+    padding: 100px 0px 30px 0px; /* Reduced bottom padding from 100px to 30px */
 }
+
 .contactForm p{
     padding-right: 50px; 
 }
@@ -21,11 +22,8 @@
 }
 
 @media (max-width: 576px){
-    .contactform{
-        padding: 0px 20px;
-    }
-    .contactForm{
-        padding: 50px 0px;
+    .contactForm {
+        padding: 50px 0px 20px 0px; /* Reduced bottom padding for mobile */
     }
     .contactForm h1{
         text-align: center;
