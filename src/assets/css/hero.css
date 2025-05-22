@@ -1,4 +1,170 @@
 .hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 80px 10%;
+  background: #f8f9fa;
+  min-height: 80vh;
+  background-image: url('../images/backgroundambitious.jpg');
+  overflow: hidden; 
+  flex-wrap: wrap; /* ✅ Ensures image wraps properly on smaller desktop screens */
+}
+
+
+.hero-content {
+  max-width: 500px;
+}
+
+.hero-content h1 {
+  font-size: 3.8rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  padding: 8px 18px;
+  border-radius: 50px;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  padding: 8px;
+  border-radius: 50px;
+  min-width: 0; 
+}
+
+.search-bar .search-bton {
+  background: #1d3557;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.3s;
+  white-space: nowrap; 
+  flex-shrink: 0; 
+}
+
+.search-bar .search-btn:hover {
+  background: #0056b3;
+}
+
+.suggestion-list {
+  list-style: none;
+  background-color: white;
+  border: 1px solid #ccc;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  z-index: 99;
+  width: 250px;
+  max-height: 150px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.suggestion-list li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestion-list li:hover {
+  background-color: #f0f0f0;
+}
+
+.high {
+  background-color: yellow;
+  transition: background-color 0.5s ease;
+}
+
+
+.hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 !important;  /* ✅ Clear any unintended margin */
+  padding: 0 !important;
+  flex: 1 1 50%; /* ✅ Flex shrink/grow for responsive layout */
+}
+
+.hero-image img {
+  max-width: 570px;
+  width: 100%;
+  border-radius: 10px;
+  margin: 0 auto;          /* ✅ Center the image */
+  display: block;
+  /* vertical-align: middle; */
+}
+
+/* Adjust layout and spacing on tablets and smaller */
+@media (max-width: 992px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 5%;
+  }
+
+  .hero-content {
+    max-width: 100%;
+    margin-bottom: 30px;
+  }
+
+  .search-bar {
+    margin: 0 auto;
+  }
+
+  .hero-image {
+    margin-top: 0 !important;  /* ✅ Remove top margin if any appears */
+  }
+
+  .hero-image img {
+    max-width: 90%;
+    margin-top: 0 !important; /* ✅ Prevent unexpected margin-top on mobile */
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding-bottom: 20px;
+    padding-top: 40px;
+  }
+
+  .hero-image img {
+    margin-bottom: 0;
+    display: block;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* .hero {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -99,6 +265,9 @@
     border-radius: 10px;
    
   }
+
+
+  
   
  
   @media (max-width: 992px) {
@@ -126,12 +295,12 @@
 
 @media (max-width: 768px) {
   .hero {
-    padding-bottom: 20px; /* Reduce bottom padding to remove large gap */
+    padding-bottom: 20px;
   }
 
   .hero-image img {
-    margin-bottom: 0; /* Ensure no extra margin below the image */
+    margin-bottom: 0; 
     display: block;
   }
 }
-
+ */
