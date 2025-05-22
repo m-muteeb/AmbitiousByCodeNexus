@@ -36,7 +36,7 @@ const LoginPage = () => {
         const role = userData.role;
 
         // 3. Redirect based on role
-        if (role === 'admin') {
+        if (role === 'user') {
           navigate('/institutionpage');
         } else if (role === 'superadmin') {
           navigate('/dashboard/addcontent');

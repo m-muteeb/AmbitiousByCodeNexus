@@ -15,7 +15,7 @@ const ContactSection = () => {
       <div className="row">
         <div className="col-md-6 mt-3">
           <h1 style={{ fontFamily: "Playfair-Display", fontSize: "35px" }}>How To Find Us</h1>
-          <p className="mt-4" style={{ color: "#767676" }}>
+          <p className="mt-4 text-dark" style={{ color: "#767676" }}>
           Get in touch to explore how we can support your learning journey. Whether you have questions about our programs, just want to learn more, feel free to give us a call, send us an email, or fill out the contact form — we’re here to help.
           </p>
           <p style={{ color: "#000000" }}>
@@ -34,8 +34,8 @@ const ContactSection = () => {
         </div>
         <div className="col-md-6 mt-3">
           <h1 style={{ fontFamily: "Playfair-Display", fontSize: "35px" }}>Contact Us</h1>
-          <p className="mt-4" style={{ color: "#767676" }}>
-            Your email address will not be published. Required fields are marked *
+          <p className="mt-4 text-dark" style={{ color: "#767676" }}>
+            Your email address will not be published.
           </p>
           <form  className="contactform">
             <div className="row">

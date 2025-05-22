@@ -13,18 +13,10 @@ const subjects = [
   "physics",
   "chemistry",
   "computer",
-  "tarjma tul Quran",
-  "pak Studies",
+  "tarjma-tul-quran",
+  "pak-studies",
 ];
 
-
-
-// const contentTypes = [
-//   { label: "📖 Book Lessons", value: "book-lessons" },
-//   { label: "📝 MCQs", value: "mcqs" },
-//   { label: "📜 Past Papers", value: "past-papers" },
-//   { label: "📜 Kamiyab Series", value: "Kamiyab-Series" },
-// ];
 
 const Notes = () => {
   const { selectedClass, subject, contentType } = useParams();

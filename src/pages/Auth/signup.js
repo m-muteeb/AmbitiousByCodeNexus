@@ -79,7 +79,9 @@ const SignupPage = () => {
               </li>
               <li>After registration, just login anytime to get modified PDFs.</li>
             </ul>
-            <button onClick={() => setShowPopup(false)} style={styles.popupButton}>I Understand</button>
+            <button onClick={() => setShowPopup(false)} style={styles.popupButton}>
+              I Understand
+            </button>
           </div>
         </div>
       )}
@@ -93,13 +95,61 @@ const SignupPage = () => {
         {error && <p style={styles.error}>{error}</p>}
 
         <form onSubmit={handleSignup} style={styles.form}>
-          <input type="text" placeholder="Institution Name" value={institutionName} onChange={(e) => setInstitutionName(e.target.value)} required style={styles.input} />
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={styles.input} />
-          <input type="file" accept="image/*" onChange={(e) => setLogo(e.target.files[0])} style={styles.input} />
-          <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} required style={styles.input} />
-          <input type="tel" placeholder="Phone Number" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required style={styles.input} />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={styles.input} />
-          <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required style={styles.input} />
+          <input
+            type="text"
+            placeholder="Institution Name"
+            value={institutionName}
+            onChange={(e) => setInstitutionName(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setLogo(e.target.files[0])}
+            required
+            style={styles.input}
+          />
+          <input
+            type="text"
+            placeholder="Address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <input
+            type="tel"
+            placeholder="Phone Number"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            style={styles.input}
+          />
 
           <button type="submit" style={styles.button} disabled={loading}>
             {loading ? 'Signing Up...' : 'Sign Up'}

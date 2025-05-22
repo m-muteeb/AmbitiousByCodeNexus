@@ -36,7 +36,6 @@ import {
 } from "firebase/storage";
 import { getStorage } from "firebase/storage";
 
-
 const ManageContent = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -124,15 +123,15 @@ const ManageContent = () => {
   };
 
 
-  const extractStoragePath = (url) => {
-    try {
-      const decodedUrl = decodeURIComponent(url);
-      const pathMatch = decodedUrl.match(/\/o\/(.*?)\?/);
-      return pathMatch ? pathMatch[1] : null;
-    } catch {
-      return null;
-    }
-  };
+const extractStoragePath = (url) => {
+  try {
+    const decodedUrl = decodeURIComponent(url);
+    const pathMatch = decodedUrl.match(/\/o\/(.*?)\?/);
+    return pathMatch ? pathMatch[1] : null;
+  } catch {
+    return null;
+  }
+};
 
   const handleRemoveFile = async (index, productId) => {
     const fileData = editingProduct.fileUrls[index];
@@ -156,19 +155,19 @@ const ManageContent = () => {
       await deleteObject(fileRef);
       console.log("File deleted successfully from Storage");
 
-      // Step 2: Update Firestore to remove the file URL
-      const updatedFiles = editingProduct.fileUrls.filter((_, i) => i !== index);
-      const productRef = doc(fireStore, "topics", productId);
+    // Step 2: Update Firestore to remove the file URL
+    const updatedFiles = editingProduct.fileUrls.filter((_, i) => i !== index);
+    const productRef = doc(fireStore, "topics", productId);
 
       await updateDoc(productRef, { fileUrls: updatedFiles });
       console.log("File URL removed from Firestore");
 
-      // Step 3: Update local state
-      setEditingProduct((prev) => ({ ...prev, fileUrls: updatedFiles }));
-    } catch (error) {
-      console.error("Error deleting file:", error);
-    }
-  };
+    // Step 3: Update local state
+    setEditingProduct((prev) => ({ ...prev, fileUrls: updatedFiles }));
+  } catch (error) {
+    console.error("Error deleting file:", error);
+  }
+};
 
 
   const handleUpdate = async (values) => {
@@ -280,23 +279,26 @@ const ManageContent = () => {
     },
   ];
 
- return (
-  <>
-    <h2 style={{ textAlign: 'center', paddingBottom: '20px' }}>Manage Products</h2>
-    <div
-      className="container"
-      style={{
-        fontFamily: "Arial, sans-serif",
-        padding: "20px",
-      }}
-    >
-      <Table 
-        dataSource={products} 
-        columns={columns} 
-        rowKey="id" 
-        bordered
-        scroll={{ x: true }}
-      />
+  return (
+    <>
+      
+      <div
+        className="container"
+        style={{
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
+        <div className="row">
+          <div className="col-12">
+            <h2 className="page-title py-5 mt-3 text-center">Manage Content</h2>
+
+               <div className="table-responsive">
+          <Table dataSource={products} columns={columns} rowKey="id" bordered />
+        </div>
+
+          </div>
+        </div>
+        
 
       <Modal
         title="Edit Product"
@@ -345,41 +347,42 @@ const ManageContent = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Uploaded Files">
+            <Form.Item label="Uploaded Files">
             {editingProduct?.fileUrls?.length > 0 ? (
-              editingProduct.fileUrls.map((file, index) => {
-                const fileUrl = typeof file === "string" ? file : file.url;
-                const fileName = typeof file === "string" ? `View File ${index + 1}` : file.fileName;
+  editingProduct.fileUrls.map((file, index) => {
+    const fileUrl = typeof file === "string" ? file : file.url;
+    const fileName = typeof file === "string" ? `View File ${index + 1}` : file.fileName;
 
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <a
-                      href={fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ marginRight: "8px" }}
-                    >
-                      {fileName}
-                    </a>
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleRemoveFile(index, editingProduct?.id)}
-                    />
-                  </div>
-                );
-              })
-            ) : (
-              <p>No previous files</p>
-            )}
+    return (
+      <div
+        key={index}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "8px",
+        }}
+      >
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ marginRight: "8px" }}
+        >
+          {fileName}
+        </a>
+        <Button
+          type="text"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => handleRemoveFile(index, editingProduct?.id)}
+        />
+      </div>
+    );
+  })
+) : (
+  <p>No previous files</p>
+)}
+
 
             <Upload
               multiple
