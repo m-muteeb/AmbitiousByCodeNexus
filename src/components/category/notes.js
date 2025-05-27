@@ -131,19 +131,39 @@ const Notes = () => {
 
  
   
+  // const handleTopicClick = (topicName) => {
+  //   const fileData = topics[topicName]?.[0];
+  
+  //   const fileUrl = typeof fileData === "string"
+  //     ? fileData // case 1: raw URL string
+  //     : fileData?.url; // case 2: object with a 'url' field
+  
+  //   if (fileUrl) {
+  //     navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
+  //   } else {
+  //     console.warn("No valid file URL found for topic:", topicName);
+  //   }
+  // };
+
+
   const handleTopicClick = (topicName) => {
-    const fileData = topics[topicName]?.[0];
-  
-    const fileUrl = typeof fileData === "string"
-      ? fileData // case 1: raw URL string
-      : fileData?.url; // case 2: object with a 'url' field
-  
-    if (fileUrl) {
-      navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
-    } else {
-      console.warn("No valid file URL found for topic:", topicName);
-    }
-  };
+  const fileData = topics[topicName]?.[0];
+
+  // Handle both string and object formats
+  let fileUrl = "";
+
+  if (typeof fileData === "string") {
+    fileUrl = fileData;
+  } else if (fileData && typeof fileData === "object") {
+    fileUrl = fileData.url || fileData.fileUrl || "";
+  }
+
+  if (fileUrl && typeof fileUrl === "string") {
+    navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
+  } else {
+    console.warn("No valid file URL found for topic:", topicName);
+  }
+};
 
   
   

@@ -14,7 +14,8 @@ import {
   LoadingOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { storage, fireStore } from "../../config/firebase";
+import { fireStore } from "../../config/firebase";
+import { supabase } from "../../config/supabase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
@@ -162,39 +163,27 @@ const AddContent = () => {
 
     try {
       if (file && file.length > 0) {
-        const uploadPromises = file.map((fileItem) => {
+        const uploadPromises = file.map(async (fileItem) => {
           const uniqueFileName = `${Date.now()}-${fileItem.name}`;
-          const storageRef = ref(storage, `uploads/${uniqueFileName}`);
-          const uploadTask = uploadBytesResumable(
-            storageRef,
-            fileItem.originFileObj
-          );
+          const { data, error } = await supabase.storage
+            .from("topics") // your Supabase bucket name
+            .upload(uniqueFileName, fileItem.originFileObj, {
+              cacheControl: "3600",
+              upsert: false,
+            });
 
-          return new Promise((resolve, reject) => {
-            uploadTask.on(
-              "state_changed",
-              (snapshot) => {
-                const progress =
-                  (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log(`Upload is ${progress}% done`);
-              },
-              (error) => {
-                console.error("Upload failed:", error);
-                message.error("File upload failed.", 3);
-                reject(error);
-              },
-              async () => {
-                const downloadURL = await getDownloadURL(
-                  uploadTask.snapshot.ref
-                );
-                const fileName = fileItem.name;
-                fileUrls.push({ url: downloadURL, fileName });
-                resolve();
-              }
-            );
-          });
+          if (error) {
+            console.error("Upload failed:", error.message);
+            message.error("File upload failed.", 3);
+            throw error;
+          }
+
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("topics").getPublicUrl(data.path);
+
+          fileUrls.push({ url: publicUrl, fileName: fileItem.name });
         });
-
         await Promise.all(uploadPromises);
       }
 
