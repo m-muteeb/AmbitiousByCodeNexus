@@ -1,0 +1,108 @@
+/* AdminUserList.module.css */
+.adminDashboardContainer {
+  padding: 40px;
+  max-width: 1200px;
+  margin: auto;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin-top: 75px;
+}
+
+.adminTitle {
+  font-size: 28px;
+  color: #0d47a1;
+  margin-bottom: 40px;
+  font-weight: 600;
+}
+
+.cardContainer {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: linear-gradient(135deg, #2196f3, #64b5f6);
+  color: white;
+  padding: 30px 20px;
+  border-radius: 12px;
+  width: 260px;
+  height: 160px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  opacity: 0.9;
+}
+
+.cardIcon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.subTitle {
+  font-size: 22px;
+  color: #0d47a1;
+  margin-bottom: 20px;
+}
+
+.userTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.userTable th,
+.userTable td {
+  padding: 14px;
+  border: 1px solid #ddd;
+  text-align: center;
+  font-size: 14px;
+}
+
+.userTable th {
+  background-color: #1976d2;
+  color: white;
+  font-weight: 600;
+}
+
+.userTable td {
+  background-color: #f9f9f9;
+}
+
+.makeAdminBtn,
+.makePremiumBtn,
+.backBtn {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.3s ease;
+}
+
+.makeAdminBtn:hover,
+.makePremiumBtn:hover,
+.backBtn:hover {
+  background-color: #6a92cf;
+}
+
+.backBtn {
+  margin-bottom: 20px;
+  display: inline-block;
+}

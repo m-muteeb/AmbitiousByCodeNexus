@@ -35,12 +35,12 @@ const LoginPage = () => {
         const role = userData.role;
 
         // 3. Redirect based on role
-        if (role === 'premium' || role === 'admin' || role === 'superadmin') {
+        if (role === 'premium' || role === 'admin') {
           navigate('/institutionpage');
         } else if (role === 'superadmin') {
           navigate('/dashboard/addcontent');
         } else {
-          setError('Access denied. Your role does not have permission.');
+          setError('Access denied. Your role does not have permission if you are the new use then wait for 24 hours and if you think this is the mistake then contact us.');
         }
       } else {
         setError('User data not found in Firestore.');

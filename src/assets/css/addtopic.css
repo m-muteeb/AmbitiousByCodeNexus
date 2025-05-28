@@ -23,3 +23,29 @@
   margin-top: -24px !important; /* Adjust to fine-tune */
   margin-left: -80px !important; /* Adjust to fine-tune */
 }
+
+.additional-links {
+  margin-top: 20px;
+  text-align: center;
+  padding: 10px;
+}
+
+.additional-links a {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 15px;
+  color: #1890ff;
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.additional-links a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+  transform: scale(1.05);
+}
+
+.additional-links a:active {
+  color: #003366;
+  transform: scale(1);
+}

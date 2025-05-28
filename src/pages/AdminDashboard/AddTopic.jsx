@@ -32,7 +32,6 @@ const AddContent = () => {
   const [addingClass, setAddingClass] = useState(false);
   const [newClass, setNewClass] = useState("");
   const [isPaid, setIsPaid] = useState(false); // Toggle for paid content
-  // const [subject, setSubject] = useState(""); // For subject input
   const [form] = Form.useForm();
   const [contentTypes, setContentTypes] = useState([]);
   const [newContentType, setNewContentType] = useState("");
@@ -79,6 +78,7 @@ const AddContent = () => {
 
     fetchContentTypes();
   }, []);
+  
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
@@ -125,6 +125,7 @@ const AddContent = () => {
       }
     }
   };
+
   const handleAddSubject = async () => {
     if (
       newSubject &&
@@ -211,7 +212,6 @@ const AddContent = () => {
       form.resetFields();
       setDescription("");
       setIsPaid(false);
-      // setSubject("");
     } catch (e) {
       console.error("Error saving topic:", e);
       message.error("Failed to save topic.", 3);
@@ -280,9 +280,7 @@ const AddContent = () => {
                     />
                     <Button
                       type="primary"
-                      icon={
-                        addingClass ? <LoadingOutlined /> : <PlusOutlined />
-                      }
+                      icon={addingClass ? <LoadingOutlined /> : <PlusOutlined />}
                       onClick={handleAddClass}
                     >
                       {addingClass ? "Adding..." : "Add"}
@@ -321,9 +319,7 @@ const AddContent = () => {
                     />
                     <Button
                       type="primary"
-                      icon={
-                        addingSubject ? <LoadingOutlined /> : <PlusOutlined />
-                      }
+                      icon={addingSubject ? <LoadingOutlined /> : <PlusOutlined />}
                       onClick={handleAddSubject}
                     >
                       {addingSubject ? "Adding..." : "Add"}
@@ -343,9 +339,7 @@ const AddContent = () => {
           <Form.Item
             label="Content Type"
             name="contentType"
-            rules={[
-              { required: true, message: "Please select a content type!" },
-            ]}
+            rules={[{ required: true, message: "Please select a content type!" }]}
           >
             <Select
               placeholder="Select a content type"
@@ -365,11 +359,7 @@ const AddContent = () => {
                     <Button
                       type="primary"
                       icon={
-                        addingContentType ? (
-                          <LoadingOutlined />
-                        ) : (
-                          <PlusOutlined />
-                        )
+                        addingContentType ? <LoadingOutlined /> : <PlusOutlined />
                       }
                       onClick={handleAddContentType}
                     >
@@ -387,8 +377,6 @@ const AddContent = () => {
             </Select>
           </Form.Item>
 
-          {/* Show subject only when isPaid is true */}
-
           <Form.Item label="Description" name="description">
             <Input.TextArea
               placeholder="Enter description"
@@ -401,7 +389,9 @@ const AddContent = () => {
             label="Upload File"
             name="file"
             valuePropName="fileList"
-            getValueFromEvent={(e) => (Array.isArray(e) ? e : e && e.fileList)}
+            getValueFromEvent={(e) =>
+              Array.isArray(e) ? e : e && e.fileList
+            }
           >
             <Upload
               name="file"
@@ -419,15 +409,6 @@ const AddContent = () => {
               onChange={(checked) => setIsPaid(checked)}
             />
           </Form.Item>
-          {/* {isPaid && (
-            <Form.Item label="Subject" name="subject">
-              <Input
-                placeholder="Enter subject for paid content"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
-            </Form.Item>
-          )} */}
 
           <Form.Item>
             <Button
@@ -439,8 +420,18 @@ const AddContent = () => {
               {uploading ? "Uploading..." : "Create Topic"}
             </Button>
           </Form.Item>
+
+          {/* Added Links to Dashboard */}
+      <div className="additional-links">
+        <Link to="/dashboard/allowusers" style={{ marginRight: 20 }}>
+          Manage Users
+        </Link>
+        <Link to="/dashboard/manageContent">Manage Content</Link>
+      </div>
         </Form>
       </Card>
+
+      
     </div>
   );
 };
