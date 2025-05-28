@@ -1,9 +1,9 @@
 // src/components/LoginPage.js
-import React, { useState , useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../../config/firebase';
-import { useNavigate, Link } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
+import { useNavigate, Link } from 'react-router-dom'; // Add useNavigate here
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -12,10 +12,9 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-   useEffect(() => {
-      window.scrollTo(0, 0);
-    }, []);
-  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -36,7 +35,7 @@ const LoginPage = () => {
         const role = userData.role;
 
         // 3. Redirect based on role
-        if (role === 'premium' || role === 'admin') {
+        if (role === 'premium' || role === 'admin' || role === 'superadmin') {
           navigate('/institutionpage');
         } else if (role === 'superadmin') {
           navigate('/dashboard/addcontent');
@@ -98,7 +97,6 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: '48px',
-
   },
   formWrapper: {
     background: '#fff',
