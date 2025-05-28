@@ -1,26 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { fireStore, auth } from "../config/firebase";
-import {
-  Button,
-  Card,
-  Spin,
-  Tag,
-  Checkbox,
-  message
-} from "antd";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import "../assets/css/pdflist.css";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, fireStore } from "../config/firebase";
+import { Spin, Button, message, Card, Row, Col, Alert, Tooltip } from "antd";
+import { FileSearchOutlined, CrownOutlined } from "@ant-design/icons";
+import DemoTests from "./DemoTests";
+import PremiumTests from "./PremiumTests";
+import { addHeaderToPdf } from "../utils/pdfUtils";
 
 const PdfList = () => {
   const [user, setUser] = useState(null);
   const [institution, setInstitution] = useState(null);
-  const [pdfs, setPdfs] = useState([]);
-  const [filteredPdfs, setFilteredPdfs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [downloading, setDownloading] = useState(false);
+  const [activeSection, setActiveSection] = useState(null); // "demo" | "premium" | null
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -35,124 +30,13 @@ const PdfList = () => {
       } else {
         setUser(null);
         setInstitution(null);
-        message.warning("You must be logged in to view PDFs.");
+        message.warning("You must be logged in.");
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    const fetchPdfs = async () => {
-      try {
-        const snapshot = await getDocs(collection(fireStore, "institutionpdfs"));
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        data.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
-        setPdfs(data);
-        setFilteredPdfs(data);
-      } catch (err) {
-        console.error("Error fetching PDFs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPdfs();
-  }, []);
-
-  const handleCheckboxChange = (checked, file) => {
-    if (checked) {
-      setSelectedFiles(prev => [...prev, file]);
-    } else {
-      setSelectedFiles(prev => prev.filter(f => f.url !== file.url));
-    }
-  };
-
-  const handleSelectAll = () => {
-    const allFiles = filteredPdfs.flatMap(pdf =>
-      pdf.fileUrls.map(file => ({
-        ...file,
-        subject: pdf.subject
-      }))
-    );
-    setSelectedFiles(allFiles);
-  };
-
-  const handleClearAll = () => {
-    setSelectedFiles([]);
-  };
-
-  const addHeaderToPdf = async (pdfUrl, institution, fileName) => {
-    const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const pages = pdfDoc.getPages();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-    const logoUrl = institution.logoUrl;
-    const logoBlob = await fetch(logoUrl).then(res => res.blob());
-    const mimeType = logoBlob.type.toLowerCase();
-
-    let logoImage;
-
-    if (["image/png", "image/jpeg"].includes(mimeType)) {
-      const buffer = await logoBlob.arrayBuffer();
-      logoImage = mimeType === "image/png"
-        ? await pdfDoc.embedPng(buffer)
-        : await pdfDoc.embedJpg(buffer);
-    } else {
-      const imageBitmap = await createImageBitmap(logoBlob);
-      const canvas = document.createElement("canvas");
-      canvas.width = imageBitmap.width;
-      canvas.height = imageBitmap.height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(imageBitmap, 0, 0);
-      const pngDataUrl = canvas.toDataURL("image/png");
-      const pngBytes = await fetch(pngDataUrl).then(res => res.arrayBuffer());
-      logoImage = await pdfDoc.embedPng(pngBytes);
-    }
-
-    const logoWidth = 200;
-    const logoHeight = logoImage.height / logoImage.width * logoWidth;
-
-    for (const page of pages) {
-      const { width, height } = page.getSize();
-
-      page.drawImage(logoImage, {
-        x: (width - logoWidth) / 2,
-        y: height / 2 - logoHeight / 2,
-        width: logoWidth,
-        height: logoHeight,
-        opacity: 0.1
-      });
-
-      const nameSize = 30;
-      const nameWidth = font.widthOfTextAtSize(institution.institutionName || "", nameSize);
-      page.drawText(institution.institutionName || "", {
-        x: (width - nameWidth) / 2,
-        y: height - 40,
-        size: nameSize,
-        font,
-        color: rgb(0, 0, 0)
-      });
-
-      const addressSize = 18;
-      const addressWidth = font.widthOfTextAtSize(institution.address || "", addressSize);
-      page.drawText(institution.address || "", {
-        x: (width - addressWidth) / 2,
-        y: height - 60,
-        size: addressSize,
-        font,
-        color: rgb(0.4, 0.4, 0.4)
-      });
-    }
-
-    const modifiedPdfBytes = await pdfDoc.save();
-    const blob = new Blob([modifiedPdfBytes], { type: "application/pdf" });
-    const downloadLink = document.createElement("a");
-    downloadLink.href = URL.createObjectURL(blob);
-    downloadLink.download = `${institution.institutionName || "institution"}-${fileName}`;
-    downloadLink.click();
-  };
 
   const handleDownloadSelected = async () => {
     if (!selectedFiles.length) return message.info("No PDFs selected.");
@@ -170,86 +54,160 @@ const PdfList = () => {
     }
   };
 
-  if (!user || !institution) {
+  if (loading || !user || !institution) {
     return (
-      <div style={{ padding: 24 }}>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "80vh" }}>
         <Spin size="large" tip="Loading user and institution..." />
       </div>
     );
   }
 
-  const grouped = filteredPdfs.reduce((acc, pdf) => {
-    const cls = pdf.class;
-    const subj = pdf.subject;
-    if (!acc[cls]) acc[cls] = {};
-    if (!acc[cls][subj]) acc[cls][subj] = [];
+  const role = institution.role;
 
-    pdf.fileUrls.forEach(file => {
-      acc[cls][subj].push({
-        ...file,
-        subject: subj
-      });
-    });
+  const onSelectSection = (section) => {
+    setSelectedFiles([]);
+    setAccessDenied(false);
 
-    return acc;
-  }, {});
+    if (section === "premium" && role === "admin") {
+      setAccessDenied(true);
+      setActiveSection(null);
+      message.error("You don't have access to Premium Tests.");
+    } else {
+      setActiveSection(section);
+    }
+  };
 
   return (
-    <div className="pdf-list-container">
-      <h1 className="title">PDF Library</h1>
+    <div className="pdf-list-container" style={{ padding: 24 }}>
+      <h1 style={{ marginTop: 78 }}>
+        Welcome back, <span style={{ color: "#1890ff" }}>{institution?.institutionName}</span>!
+      </h1>
 
-      <div style={{ marginTop: 20 }}>
-        <Button onClick={handleSelectAll} style={{ marginRight: 8 }}>Select All</Button>
-        <Button onClick={handleClearAll} style={{ marginRight: 8 }}>Clear All</Button>
-        <Button type="primary" loading={downloading} onClick={handleDownloadSelected}>
-          Download Selected
-        </Button>
-      </div>
+      <p style={{ fontSize: 16, marginBottom: 24 }}>
+        We're glad to have you here. Please select a test type below to view and download your resources.
+      </p>
 
-      {loading ? (
-        <Spin size="large" tip="Loading PDFs..." />
-      ) : (
-        <div className="pdf-list mt-2">
-          {Object.entries(grouped).map(([cls, subjects]) => (
-            <div key={cls} style={{ marginBottom: 32 }}>
-              <h2 style={{ borderBottom: "2px solid #0000", paddingBottom: 8 }}>{cls}</h2>
+      {/* 🎉 Premium Member Congratulations */}
+      {role === "premium" && (
+        <Alert
+          message="🎉 Congratulations!"
+          description="You are a Premium Member for the decided term. Enjoy exclusive access to high-quality test resources curated just for you. We're honored to support your educational journey!"
+          type="success"
+          showIcon
+          style={{ marginBottom: 24 }}
+        />
+      )}
 
-              {Object.entries(subjects).map(([subj, files]) => (
-                <div key={subj} style={{ marginBottom: 24, paddingLeft: 16 }}>
+      {/* Admin Notice */}
+      {role === "admin" && (
+        <Alert
+          message="Notice"
+          description="You have only access to the Demo Tests. To gain access to the Premium version, please contact us at +923334082706"
+          type="warning"
+          showIcon
+          style={{ marginBottom: 24 }}
+        />
+      )}
+
+      {/* Section Select */}
+      {!activeSection && (
+        <>
+          <h2 className="title" style={{ marginTop: 16 }}>Select Test Type</h2>
+
+          <Row gutter={16} style={{ marginTop: 24, marginBottom: 24 }}>
+            {(role === "admin" || role === "premium" || role === "superadmin") && (
+              <Col xs={24} sm={12}>
+                <Card
+                  hoverable
+                  onClick={() => onSelectSection("demo")}
+                  style={{ textAlign: "center" }}
+                >
+                  <FileSearchOutlined style={{ fontSize: 40, color: "#1890ff" }} />
+                  <h3>Demo Tests</h3>
+                </Card>
+              </Col>
+            )}
+
+            {(role === "premium" || role === "superadmin" || role === "admin") && (
+              <Col xs={24} sm={12}>
+                {role === "admin" ? (
+                  <Tooltip title="You have no access to Premium Tests. Please contact us to upgrade.">
+                    <Card
+                      hoverable
+                      style={{ textAlign: "center", cursor: "not-allowed" }}
+                      onClick={() => message.error("You don't have access to Premium Tests.")}
+                    >
+                      <CrownOutlined style={{ fontSize: 40, color: "#fadb14" }} />
+                      <h3 style={{ color: "rgba(0,0,0,0.25)" }}>Premium Tests</h3>
+                    </Card>
+                  </Tooltip>
+                ) : (
                   <Card
-                    className="pdf-card"
-                    title={subj}
-                    style={{ marginBottom: 16 }}
+                    hoverable
+                    onClick={() => onSelectSection("premium")}
+                    style={{ textAlign: "center" }}
                   >
-                    {files.map((file, index) => {
-                      const isChecked = selectedFiles.some(f => f.url === file.url);
-                      return (
-                        <div
-                          key={index}
-                          style={{ display: "flex", alignItems: "center", marginBottom: 8 }}
-                        >
-                          <Checkbox
-                            checked={isChecked}
-                            onChange={(e) =>
-                              handleCheckboxChange(e.target.checked, file)
-                            }
-                          />
-                          <span style={{ flex: 1, marginLeft: 8 }}>
-                            {index + 1}. <strong>{file.fileName}</strong>{" "}
-                            {file.isPaid && <Tag color="red">Paid</Tag>}
-                          </span>
-                          <Button type="link" onClick={() => window.open(file.url, "_blank")}>
-                            View
-                          </Button>
-                        </div>
-                      );
-                    })}
+                    <CrownOutlined style={{ fontSize: 40, color: "#fadb14" }} />
+                    <h3>Premium Tests</h3>
                   </Card>
-                </div>
-              ))}
-            </div>
-          ))}
+                )}
+              </Col>
+            )}
+          </Row>
+        </>
+      )}
+
+      {/* Access Denied */}
+      {accessDenied && (
+        <Alert
+          message="Access Denied"
+          description="You don't have access to this section."
+          type="error"
+          showIcon
+          style={{ marginBottom: 24 }}
+        />
+      )}
+
+      {/* Buttons */}
+      {activeSection && (
+        <div style={{ marginTop: 24, marginBottom: 16 }}>
+          <Button onClick={() => {
+            setActiveSection(null);
+            setSelectedFiles([]);
+            setAccessDenied(false);
+          }}>
+            Back to Selection
+          </Button>
+          <Button
+            type="primary"
+            style={{ marginLeft: 8 }}
+            loading={downloading}
+            onClick={handleDownloadSelected}
+            disabled={selectedFiles.length === 0}
+          >
+            Download Selected
+          </Button>
+          <Button
+            onClick={() => setSelectedFiles([])}
+            style={{ marginLeft: 8, marginTop: 2 }}
+            disabled={selectedFiles.length === 0}
+          >
+            Clear All
+          </Button>
         </div>
+      )}
+
+      {/* Tests */}
+      {activeSection === "demo" && (
+        <Card title="📘 Demo Tests" style={{ marginTop: 16 }}>
+          <DemoTests selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} />
+        </Card>
+      )}
+
+      {activeSection === "premium" && (
+        <Card title="👑 Premium Tests" style={{ marginTop: 16 }}>
+          <PremiumTests selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} />
+        </Card>
       )}
     </div>
   );

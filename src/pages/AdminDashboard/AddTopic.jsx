@@ -213,7 +213,8 @@ const AddContent = () => {
       await addDoc(collection(fireStore, "topics"), topicData);
 
       if (isPaid) {
-        await addDoc(collection(fireStore, "institutionpdfs"), topicData);
+        // Changed collection name here only
+        await addDoc(collection(fireStore, "premiumtests"), topicData);
       }
 
       message.success("Topic created successfully!", 3);
@@ -432,7 +433,7 @@ const AddContent = () => {
           {/* {isPaid && (
             <Form.Item label="Subject" name="subject">
               <Input
-                placeholder="Enter subject"
+                placeholder="Enter subject for paid content"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
               />
@@ -440,27 +441,14 @@ const AddContent = () => {
           )} */}
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" block disabled={uploading}>
-              {uploading ? <LoadingOutlined /> : "Submit"}
-            </Button>
-          </Form.Item>
-
-          <Form.Item>
             <Button
-              type="default"
-              block
-              onClick={() => navigate("/dashboard/manageContent")}
+              type="primary"
+              htmlType="submit"
+              loading={uploading}
+              style={{ width: "100%" }}
             >
-              Manage Topics
+              {uploading ? "Uploading..." : "Create Topic"}
             </Button>
-          </Form.Item>
-
-          <Form.Item>
-            <Link to="/dashboard/allowusers">
-              <Button type="dashed" block>
-                Allow Institution Access
-              </Button>
-            </Link>
           </Form.Item>
         </Form>
       </Card>

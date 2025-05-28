@@ -55,7 +55,7 @@ const PrivateRoute = ({ children, requiredRoles = [] }) => {
       <div style={{ textAlign: 'center', padding: '100px 20px' }}>
         <h1>🚫 Access Denied</h1>
         <p style={{ fontSize: '18px', marginTop: '10px' }}>
-          You do not have access to this page.<br />
+          You do not have access to this page If you are a new user then wait for 24 Hours .<br />
           Please <strong>contact the admin</strong> if you believe this is a mistake.
         </p>
       </div>

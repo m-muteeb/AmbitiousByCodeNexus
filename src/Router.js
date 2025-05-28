@@ -27,7 +27,7 @@ export default function Router() {
       <Route 
         path="/institutionpage" 
         element={
-          <PrivateRoute requiredRoles={['user', 'superadmin']}>  
+          <PrivateRoute requiredRoles={['admin', 'superadmin' , 'premium']}>  
 
           {/* There will be the admin */}
             <InstitutionAdminPage />
