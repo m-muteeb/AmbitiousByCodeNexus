@@ -27,8 +27,8 @@
   background: #fff;
   padding: 20px;
   border-radius: 10px;
-  width: 260px;
-  height: 220px;
+  width: 255px;
+  height: 285px;
   /* Fixed height */
   text-align: center;
   transition: transform 0.3s ease-in-out;
@@ -82,4 +82,15 @@ ul li a {
 
 ul li a:hover {
   text-decoration: underline;
+}
+
+@media (min-width: 1200px) {
+  .featured-section {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .category-card {
+    flex: 0 0 auto;
+  }
 }
