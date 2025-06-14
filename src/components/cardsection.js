@@ -9,7 +9,7 @@ const categories = [
   { title: "Class 11" },
   { title: "Class 12" },
   {
-    title: "ECAT Exam",
+    title: "ECAT",
     subItems: [
       "NUST",
       "ECAT Unsolved Tests",
@@ -26,9 +26,15 @@ const CardSection = () => {
   const [activeClass, setActiveClass] = useState(selectedClass || "");
 
   const handleSelectClass = (title) => {
-    setActiveClass(title);
-    navigate(`notes/${title.replace(/\s+/g, "").toLowerCase()}`); // Update URL
-  };
+  setActiveClass(title);
+
+  if (title === "ECAT") {
+    navigate(`/${title.replace(/\s+/g, "").toLowerCase()}`);
+  } else {
+    navigate(`notes/${title.replace(/\s+/g, "").toLowerCase()}`);
+  }
+};
+
 
   return (
     <div className="featured-container">

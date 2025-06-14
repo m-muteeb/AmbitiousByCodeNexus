@@ -15,6 +15,7 @@ const subjects = [
   "computer",
   "tarjma-tul-quran",
   "pak-studies",
+  "ecat-prep",
 ];
 
 
@@ -129,27 +130,11 @@ const Notes = () => {
     fetchTopics(subjectName, type);
   };
 
- 
-  
-  // const handleTopicClick = (topicName) => {
-  //   const fileData = topics[topicName]?.[0];
-  
-  //   const fileUrl = typeof fileData === "string"
-  //     ? fileData // case 1: raw URL string
-  //     : fileData?.url; // case 2: object with a 'url' field
-  
-  //   if (fileUrl) {
-  //     navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
-  //   } else {
-  //     console.warn("No valid file URL found for topic:", topicName);
-  //   }
-  // };
 
 
   const handleTopicClick = (topicName) => {
   const fileData = topics[topicName]?.[0];
 
-  // Handle both string and object formats
   let fileUrl = "";
 
   if (typeof fileData === "string") {
@@ -244,4 +229,3 @@ const Notes = () => {
 };
 
 export default Notes;
-

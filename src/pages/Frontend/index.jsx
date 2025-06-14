@@ -7,6 +7,7 @@ import AboutSection from './AboutPage';
 import ContactSection from './ContactPage';
 import Faqs from '../../components/faqs';
 import PrivacyPolicy from '../../components/privacypolicy';
+import EcatNotes from '../../components/category/EcatNotes';
 
 export default function FrontEnd() {
   return (
@@ -14,10 +15,12 @@ export default function FrontEnd() {
     <Routes>
 
         <Route path="/notes/:selectedClass/:category?/:subCategory?" element={<Notes />} />
+        <Route path="/:selectedClass/:subject?/:ecatContentType?" element={<EcatNotes/>} />
+
 
         <Route path="/preview" element={<Preview/>} />
 
-        <Route path="/note/:subject" element={<SubNotes />} />
+        {/* <Route path="/note/:subject" element={<SubNotes />} /> */}
         <Route path="/about" element={<AboutSection/>} />
         <Route path="/contact" element={<ContactSection/>} />
         <Route path="/faqs" element={<Faqs/>} />

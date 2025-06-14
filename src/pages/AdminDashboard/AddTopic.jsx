@@ -29,6 +29,7 @@ const AddContent = () => {
   const [description, setDescription] = useState("");
   const [uploading, setUploading] = useState(false);
   const [classes, setClasses] = useState([]);
+  const [selectedClasses, setSelectedClasses] = useState([]);
   const [addingClass, setAddingClass] = useState(false);
   const [newClass, setNewClass] = useState("");
   const [isPaid, setIsPaid] = useState(false); // Toggle for paid content
@@ -39,6 +40,9 @@ const AddContent = () => {
   const [subjects, setSubjects] = useState([]);
   const [newSubject, setNewSubject] = useState("");
   const [addingSubject, setAddingSubject] = useState(false);
+  const [ecatContentTypes, setEcatContentTypes] = useState([]);
+  const [newEcatContentType, setNewEcatContentType] = useState("");
+  const [addingEcatContentType, setAddingEcatContentType] = useState(false);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -78,7 +82,7 @@ const AddContent = () => {
 
     fetchContentTypes();
   }, []);
-  
+
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
@@ -96,6 +100,60 @@ const AddContent = () => {
 
     fetchSubjects();
   }, []);
+
+  useEffect(() => {
+    const fetchEcatContentTypes = async () => {
+      try {
+        const querySnapshot = await getDocs(
+          collection(fireStore, "ecatContentTypes")
+        );
+        const types = querySnapshot.docs.map((doc) => ({
+          label: doc.data().label,
+          value: doc.data().value,
+        }));
+        setEcatContentTypes(types);
+      } catch (error) {
+        console.error("Failed to fetch ECAT content types:", error);
+        message.error("Error loading ECAT content types.");
+      }
+    };
+
+    fetchEcatContentTypes();
+  }, []);
+
+  const handleAddEcatContentType = async () => {
+  if (
+    newEcatContentType &&
+    !ecatContentTypes.some(
+      (type) =>
+        type.label.toLowerCase() === newEcatContentType.toLowerCase() ||
+        type.value.toLowerCase() === newEcatContentType.toLowerCase()
+    )
+  ) {
+    setAddingEcatContentType(true);
+    try {
+      const newType = {
+        label: newEcatContentType,
+        value: newEcatContentType.toLowerCase().replace(/\s+/g, "-"),
+      };
+
+      await addDoc(collection(fireStore, "ecatContentTypes"), newType);
+      setEcatContentTypes([...ecatContentTypes, newType]);
+      setNewEcatContentType("");
+
+      // 👇 Set the newly added type as selected in the form
+      form.setFieldsValue({ ecatContentType: newType.value });
+
+      message.success(`ECAT content type "${newType.label}" added!`);
+    } catch (e) {
+      console.error("Error adding ECAT content type:", e);
+      message.error("Failed to add ECAT content type.");
+    } finally {
+      setAddingEcatContentType(false);
+    }
+  }
+};
+
 
   const handleAddContentType = async () => {
     if (
@@ -193,6 +251,7 @@ const AddContent = () => {
         class: selectedClasses.join(", "),
         subject: (subject || "").trim().toLowerCase(), // keep only this one
         contentType: contentType || "",
+        ecatcontentType: values.ecatContentType || "",
         description: description || "",
         fileUrls,
         isPaid: isPaid,
@@ -265,6 +324,7 @@ const AddContent = () => {
             <Select
               mode="multiple"
               placeholder="Select class(es)"
+              onChange={(value) => setSelectedClasses(value)} // ← track class changes
               dropdownRender={(menu) => (
                 <>
                   {menu}
@@ -280,7 +340,9 @@ const AddContent = () => {
                     />
                     <Button
                       type="primary"
-                      icon={addingClass ? <LoadingOutlined /> : <PlusOutlined />}
+                      icon={
+                        addingClass ? <LoadingOutlined /> : <PlusOutlined />
+                      }
                       onClick={handleAddClass}
                     >
                       {addingClass ? "Adding..." : "Add"}
@@ -292,6 +354,56 @@ const AddContent = () => {
               {classes.map((classOption) => (
                 <Option key={classOption.id} value={classOption.name}>
                   {classOption.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="ECAT Content Type"
+            name="ecatContentType"
+            rules={[
+              {
+                required: true,
+                message: "Please select an ECAT content type!",
+              },
+            ]}
+          >
+            <Select
+              placeholder="Select ECAT content type"
+              dropdownRender={(menu) => (
+                <>
+                  {menu}
+                  <div
+                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
+                  >
+                    <Input
+                      style={{ flex: "auto" }}
+                      placeholder="Add new ECAT content type"
+                      value={newEcatContentType}
+                      onChange={(e) => setNewEcatContentType(e.target.value)}
+                      onPressEnter={handleAddEcatContentType}
+                    />
+                    <Button
+                      type="primary"
+                      icon={
+                        addingEcatContentType ? (
+                          <LoadingOutlined />
+                        ) : (
+                          <PlusOutlined />
+                        )
+                      }
+                      onClick={handleAddEcatContentType}
+                    >
+                      {addingEcatContentType ? "Adding..." : "Add"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            >
+              {ecatContentTypes.map((type) => (
+                <Option key={type.value} value={type.value}>
+                  {type.label}
                 </Option>
               ))}
             </Select>
@@ -319,7 +431,9 @@ const AddContent = () => {
                     />
                     <Button
                       type="primary"
-                      icon={addingSubject ? <LoadingOutlined /> : <PlusOutlined />}
+                      icon={
+                        addingSubject ? <LoadingOutlined /> : <PlusOutlined />
+                      }
                       onClick={handleAddSubject}
                     >
                       {addingSubject ? "Adding..." : "Add"}
@@ -339,10 +453,16 @@ const AddContent = () => {
           <Form.Item
             label="Content Type"
             name="contentType"
-            rules={[{ required: true, message: "Please select a content type!" }]}
+            rules={[
+              { required: true, message: "Please select a content type!" },
+            ]}
           >
             <Select
-              placeholder="Select a content type"
+              placeholder={
+                selectedClasses.includes("ECAT")
+                  ? "Select ECAT content type"
+                  : "Select content type"
+              }
               dropdownRender={(menu) => (
                 <>
                   {menu}
@@ -351,25 +471,64 @@ const AddContent = () => {
                   >
                     <Input
                       style={{ flex: "auto" }}
-                      placeholder="Add new content type"
-                      value={newContentType}
-                      onChange={(e) => setNewContentType(e.target.value)}
-                      onPressEnter={handleAddContentType}
+                      placeholder={
+                        selectedClasses.includes("ECAT")
+                          ? "Add new ECAT content type"
+                          : "Add new content type"
+                      }
+                      value={
+                        selectedClasses.includes("ECAT")
+                          ? newEcatContentType
+                          : newContentType
+                      }
+                      onChange={(e) =>
+                        selectedClasses.includes("ECAT")
+                          ? setNewEcatContentType(e.target.value)
+                          : setNewContentType(e.target.value)
+                      }
+                      onPressEnter={
+                        selectedClasses.includes("ECAT")
+                          ? handleAddEcatContentType
+                          : handleAddContentType
+                      }
                     />
                     <Button
                       type="primary"
                       icon={
-                        addingContentType ? <LoadingOutlined /> : <PlusOutlined />
+                        selectedClasses.includes("ECAT") ? (
+                          addingEcatContentType ? (
+                            <LoadingOutlined />
+                          ) : (
+                            <PlusOutlined />
+                          )
+                        ) : addingContentType ? (
+                          <LoadingOutlined />
+                        ) : (
+                          <PlusOutlined />
+                        )
                       }
-                      onClick={handleAddContentType}
+                      onClick={
+                        selectedClasses.includes("ECAT")
+                          ? handleAddEcatContentType
+                          : handleAddContentType
+                      }
                     >
-                      {addingContentType ? "Adding..." : "Add"}
+                      {selectedClasses.includes("ECAT")
+                        ? addingEcatContentType
+                          ? "Adding..."
+                          : "Add"
+                        : addingContentType
+                        ? "Adding..."
+                        : "Add"}
                     </Button>
                   </div>
                 </>
               )}
             >
-              {contentTypes.map((type) => (
+              {(selectedClasses.includes("ECAT")
+                ? ecatContentTypes
+                : contentTypes
+              ).map((type) => (
                 <Option key={type.value} value={type.value}>
                   {type.label}
                 </Option>
@@ -389,9 +548,7 @@ const AddContent = () => {
             label="Upload File"
             name="file"
             valuePropName="fileList"
-            getValueFromEvent={(e) =>
-              Array.isArray(e) ? e : e && e.fileList
-            }
+            getValueFromEvent={(e) => (Array.isArray(e) ? e : e && e.fileList)}
           >
             <Upload
               name="file"
@@ -422,16 +579,14 @@ const AddContent = () => {
           </Form.Item>
 
           {/* Added Links to Dashboard */}
-      <div className="additional-links">
-        <Link to="/dashboard/allowusers" style={{ marginRight: 20 }}>
-          Manage Users
-        </Link>
-        <Link to="/dashboard/manageContent">Manage Content</Link>
-      </div>
+          <div className="additional-links">
+            <Link to="/dashboard/allowusers" style={{ marginRight: 20 }}>
+              Manage Users
+            </Link>
+            <Link to="/dashboard/manageContent">Manage Content</Link>
+          </div>
         </Form>
       </Card>
-
-      
     </div>
   );
 };
