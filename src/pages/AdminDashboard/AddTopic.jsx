@@ -364,7 +364,7 @@ const AddContent = () => {
             name="ecatContentType"
             rules={[
               {
-                required: true,
+                
                 message: "Please select an ECAT content type!",
               },
             ]}
