@@ -362,12 +362,6 @@ const AddContent = () => {
           <Form.Item
             label="ECAT Content Type"
             name="ecatContentType"
-            rules={[
-              {
-                
-                message: "Please select an ECAT content type!",
-              },
-            ]}
           >
             <Select
               placeholder="Select ECAT content type"
