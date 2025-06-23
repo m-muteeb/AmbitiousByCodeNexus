@@ -301,7 +301,7 @@ const EcatNotes = () => {
               className="subject-header"
               onClick={() => setIsCardOpen(!isCardOpen)}
             >
-              <span>entry-test</span>
+              <span>Entry-test</span>
               <span>{isCardOpen ? "▼" : "►"}</span>
             </div>
 
