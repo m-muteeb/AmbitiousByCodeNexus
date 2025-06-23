@@ -1,0 +1,129 @@
+/* Container & heading */
+.dashboard-container {
+  margin-top: 45px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh; /* ensure enough height */
+  padding-bottom: 60px; /* space for footer */
+}
+
+.dashboard-heading {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Row holding cards */
+.dashboard-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Card styling */
+.dashboard-card {
+  width: 100%;
+  max-width: 370px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease;
+  cursor: default;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+}
+
+.card-img-top {
+  height: 160px;
+  object-fit: cover;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* Dropdown section inside card */
+.dropdown-section {
+  background-color: #f9f9f9;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+  user-select: none;
+}
+
+/* Each dropdown clickable item */
+.dropdown-item {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 8px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #e1e8ff;
+}
+
+/* Remove border for last item */
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+/* Submenu container (nested dropdown) */
+.submenu {
+  padding-left: 20px;
+  margin-top: 6px;
+  font-size: 0.95rem;
+  color: #444;
+  user-select: text;
+}
+
+/* Submenu items styling */
+.submenu > div {
+  padding: 6px 0;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.submenu > div:hover {
+  background-color: #d1dbff;
+}
+
+/* Arrow icons (right-pointing and down-pointing) */
+/* Using CSS generated content arrows */
+
+.dropdown-item::after {
+  content: '▸'; /* right arrow */
+  font-size: 1rem;
+  color: #666;
+  transition: transform 0.3s ease;
+  margin-left: 10px;
+}
+
+.dropdown-item.active::after,
+.dropdown-item.open::after {
+  content: '▾'; /* down arrow */
+  color: #2a5dff;
+  transform: rotate(0deg);
+}
+
+/* Make sure button expands full width with cursor pointer */
+button {
+  cursor: pointer;
+}
+
+/* Add hand cursor to clickable elements */
+.dropdown-item,
+button {
+  cursor: pointer;
+}

@@ -11,7 +11,7 @@ export default function Dashboard() {
         <Route path="addContent" element={< AddContent/>} />
         <Route path="manageContent" element={<ManageContent/>} />
         <Route path="allowusers" element={<AllowUsers/>} />
-
+       
         
     </Routes>
       

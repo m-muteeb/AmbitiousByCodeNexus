@@ -24,7 +24,7 @@ export default function FrontEnd() {
         <Route path="/about" element={<AboutSection/>} />
         <Route path="/contact" element={<ContactSection/>} />
         <Route path="/faqs" element={<Faqs/>} />
-        <Route path="/privacypolicy" element={<PrivacyPolicy/>} />
+        <Route path="/privacypolicy" element={<PrivacyPolicy/>} />zz
 
       
         
