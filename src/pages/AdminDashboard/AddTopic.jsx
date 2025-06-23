@@ -263,7 +263,7 @@ const AddContent = () => {
 
       if (isPaid) {
         // Changed collection name here only
-        await addDoc(collection(fireStore, "premiumtests"), topicData);
+        await addDoc(collection(fireStore, "institutionpdfs"), topicData);
       }
 
       message.success("Topic created successfully!", 3);
