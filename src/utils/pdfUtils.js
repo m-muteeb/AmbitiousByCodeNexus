@@ -44,18 +44,24 @@ export const addHeaderToPdf = async (pdfUrl, institution, fileName) => {
       opacity: 0.1
     });
 
-    page.drawText(institution.institutionName || "", {
-      x: width / 2 - font.widthOfTextAtSize(institution.institutionName || "", 30) / 2,
+    const nameText = institution.institutionName || "";
+    const addressText = institution.address || "";
+
+    const nameWidth = font.widthOfTextAtSize(nameText, 25);
+    const addressWidth = font.widthOfTextAtSize(addressText, 15);
+
+    page.drawText(nameText, {
+      x: (width - nameWidth) / 2,
       y: height - 40,
-      size: 30,
+      size: 25,
       font,
       color: rgb(0, 0, 0)
     });
 
-    page.drawText(institution.address || "", {
-      x: width / 2 - font.widthOfTextAtSize(institution.address || "", 18) / 2,
-      y: height - 60,
-      size: 18,
+    page.drawText(addressText, {
+      x: (width - addressWidth) / 2,
+      y: height - 58,
+      size: 15,
       font,
       color: rgb(0.4, 0.4, 0.4)
     });
