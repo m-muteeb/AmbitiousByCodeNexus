@@ -1,4 +1,133 @@
+/* Container for the entire section */
 .featured-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 2rem 1rem;
+  text-align: center;
+ 
+}
+
+
+.featured-container h2{
+     font-family: 'Times New Roman', Times, serif;
+      color: #000;
+}
+
+/* Heading styling */
+.section-heading {
+  
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  border-bottom: 3px solid #007bff;
+  padding-bottom: 0.5rem;
+  transition: all 0.3s ease-in-out;
+ 
+}
+
+/* Grid layout for the cards */
+.featured-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  justify-items: center;
+   
+}
+
+/* Individual card style */
+.category-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+/* Hover effect */
+.category-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Active card border */
+.category-card.active {
+  border: 2px solid #007bff;
+}
+
+/* Icon wrapper */
+.icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Book icon style */
+.category-icon {
+  font-size: 2.5rem;
+  color: #007bff;
+}
+
+/* Card title */
+.category-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 0.8rem;
+  color: #000;
+}
+
+/* List of sub-items */
+.category-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+
+.category-card li {
+  font-size: 0.95rem;
+  padding: 0.3rem 0;
+  color: #000;
+  transition: color 0.3s ease;
+}
+
+.category-card li:hover {
+  color: #007bff;
+}
+
+/* Responsive: 2 cards per row on medium screens */
+@media (max-width: 992px) {
+  .featured-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Responsive: 1 card per row on small screens */
+@media (max-width: 600px) {
+  .featured-section {
+    grid-template-columns: 1fr;
+  }
+
+  .category-card {
+    max-width: 100%;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* .featured-container {
   text-align: center;
 }
 
@@ -32,7 +161,7 @@
   border-radius: 10px;
   width: 230px;
   height: 288px;
-  /* Fixed height */
+  
   text-align: center;
   transition: transform 0.3s ease-in-out;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
@@ -96,4 +225,4 @@ ul li a:hover {
   .category-card {
     flex: 0 0 auto;
   }
-}
+}  */
