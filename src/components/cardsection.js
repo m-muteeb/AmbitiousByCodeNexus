@@ -39,14 +39,14 @@ const CardSection = () => {
 
     if (title === "ECAT") {
       navigate(`/${title.replace(/\s+/g, "").toLowerCase()}`);
-    } else {
+    }
+    else if (title === "KG to Class 4") {
+    navigate("/note");
+    }
+    else {
       navigate(`notes/${title.replace(/\s+/g, "").toLowerCase()}`);
     }
-    if (title === "kgtoclass4") {
-      navigate(`/note`);
-    } else {
-      navigate(`/note`);
-    }
+   
   };
 
   return (

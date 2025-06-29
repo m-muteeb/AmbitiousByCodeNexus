@@ -498,7 +498,6 @@ const AddContent = () => {
           <Form.Item
             label="Subject"
             name="subject"
-            rules={[{ required: true, message: "Please select a subject!" }]}
           >
             <Select
               placeholder="Select a subject"
