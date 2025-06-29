@@ -42,6 +42,11 @@ const CardSection = () => {
     } else {
       navigate(`notes/${title.replace(/\s+/g, "").toLowerCase()}`);
     }
+    if (title === "kgtoclass4") {
+      navigate(`/note`);
+    } else {
+      navigate(`/note`);
+    }
   };
 
   return (

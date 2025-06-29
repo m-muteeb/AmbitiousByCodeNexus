@@ -43,6 +43,10 @@ const AddContent = () => {
   const [ecatContentTypes, setEcatContentTypes] = useState([]);
   const [newEcatContentType, setNewEcatContentType] = useState("");
   const [addingEcatContentType, setAddingEcatContentType] = useState(false);
+  const [primaryContentTypes, setPrimaryContentTypes] = useState([]);
+  const [newPrimaryContentType, setNewPrimaryContentType] = useState("");
+  const [addingPrimaryContentType, setAddingPrimaryContentType] =
+    useState(false);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -120,40 +124,90 @@ const AddContent = () => {
 
     fetchEcatContentTypes();
   }, []);
+  useEffect(() => {
+    const fetchPrimaryContentTypes = async () => {
+      try {
+        const querySnapshot = await getDocs(
+          collection(fireStore, "primaryContentTypes")
+        );
+        const types = querySnapshot.docs.map((doc) => ({
+          label: doc.data().label,
+          value: doc.data().value,
+        }));
+        setPrimaryContentTypes(types);
+      } catch (error) {
+        console.error("Failed to fetch primary content types:", error);
+        message.error("Error loading primary content types.");
+      }
+    };
+
+    fetchPrimaryContentTypes();
+  }, []);
 
   const handleAddEcatContentType = async () => {
-  if (
-    newEcatContentType &&
-    !ecatContentTypes.some(
-      (type) =>
-        type.label.toLowerCase() === newEcatContentType.toLowerCase() ||
-        type.value.toLowerCase() === newEcatContentType.toLowerCase()
-    )
-  ) {
-    setAddingEcatContentType(true);
-    try {
-      const newType = {
-        label: newEcatContentType,
-        value: newEcatContentType.toLowerCase().replace(/\s+/g, "-"),
-      };
+    if (
+      newEcatContentType &&
+      !ecatContentTypes.some(
+        (type) =>
+          type.label.toLowerCase() === newEcatContentType.toLowerCase() ||
+          type.value.toLowerCase() === newEcatContentType.toLowerCase()
+      )
+    ) {
+      setAddingEcatContentType(true);
+      try {
+        const newType = {
+          label: newEcatContentType,
+          value: newEcatContentType.toLowerCase().replace(/\s+/g, "-"),
+        };
 
-      await addDoc(collection(fireStore, "ecatContentTypes"), newType);
-      setEcatContentTypes([...ecatContentTypes, newType]);
-      setNewEcatContentType("");
+        await addDoc(collection(fireStore, "ecatContentTypes"), newType);
+        setEcatContentTypes([...ecatContentTypes, newType]);
+        setNewEcatContentType("");
 
-      // 👇 Set the newly added type as selected in the form
-      form.setFieldsValue({ ecatContentType: newType.value });
+        // 👇 Set the newly added type as selected in the form
+        form.setFieldsValue({ ecatContentType: newType.value });
 
-      message.success(`ECAT content type "${newType.label}" added!`);
-    } catch (e) {
-      console.error("Error adding ECAT content type:", e);
-      message.error("Failed to add ECAT content type.");
-    } finally {
-      setAddingEcatContentType(false);
+        message.success(`ECAT content type "${newType.label}" added!`);
+      } catch (e) {
+        console.error("Error adding ECAT content type:", e);
+        message.error("Failed to add ECAT content type.");
+      } finally {
+        setAddingEcatContentType(false);
+      }
     }
-  }
-};
+  };
 
+  const handleAddPrimaryContentType = async () => {
+    if (
+      newPrimaryContentType &&
+      !primaryContentTypes.some(
+        (type) =>
+          type.label.toLowerCase() === newPrimaryContentType.toLowerCase() ||
+          type.value.toLowerCase() === newPrimaryContentType.toLowerCase()
+      )
+    ) {
+      setAddingPrimaryContentType(true);
+      try {
+        const newType = {
+          label: newPrimaryContentType,
+          value: newPrimaryContentType.toLowerCase().replace(/\s+/g, "-"),
+        };
+
+        await addDoc(collection(fireStore, "primaryContentTypes"), newType);
+        setPrimaryContentTypes([...primaryContentTypes, newType]);
+        setNewPrimaryContentType("");
+
+        form.setFieldsValue({ primaryContentType: newType.value });
+
+        message.success(`Primary content type "${newType.label}" added!`);
+      } catch (e) {
+        console.error("Error adding primary content type:", e);
+        message.error("Failed to add primary content type.");
+      } finally {
+        setAddingPrimaryContentType(false);
+      }
+    }
+  };
 
   const handleAddContentType = async () => {
     if (
@@ -225,7 +279,7 @@ const AddContent = () => {
         const uploadPromises = file.map(async (fileItem) => {
           const uniqueFileName = `${Date.now()}-${fileItem.name}`;
           const { data, error } = await supabase.storage
-            .from("topics") // your Supabase bucket name
+            .from("topics")
             .upload(uniqueFileName, fileItem.originFileObj, {
               cacheControl: "3600",
               upsert: false,
@@ -249,9 +303,10 @@ const AddContent = () => {
       const topicData = {
         topic: topic || "",
         class: selectedClasses.join(", "),
-        subject: (subject || "").trim().toLowerCase(), // keep only this one
+        subject: (subject || "").trim().toLowerCase(),
         contentType: contentType || "",
         ecatcontentType: values.ecatContentType || "",
+        primaryContentType: values.primaryContentType || "",
         description: description || "",
         fileUrls,
         isPaid: isPaid,
@@ -262,8 +317,7 @@ const AddContent = () => {
       await addDoc(collection(fireStore, "topics"), topicData);
 
       if (isPaid) {
-        // Changed collection name here only
-        await addDoc(collection(fireStore, "institutionpdfs"), topicData);
+        await addDoc(collection(fireStore, "premiumtests"), topicData);
       }
 
       message.success("Topic created successfully!", 3);
@@ -359,10 +413,7 @@ const AddContent = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            label="ECAT Content Type"
-            name="ecatContentType"
-          >
+          <Form.Item label="ECAT Content Type" name="ecatContentType">
             <Select
               placeholder="Select ECAT content type"
               dropdownRender={(menu) => (
@@ -396,6 +447,47 @@ const AddContent = () => {
               )}
             >
               {ecatContentTypes.map((type) => (
+                <Option key={type.value} value={type.value}>
+                  {type.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Primary Content Type" name="primaryContentType">
+            <Select
+              placeholder="Select primary content type"
+              dropdownRender={(menu) => (
+                <>
+                  {menu}
+                  <div
+                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
+                  >
+                    <Input
+                      style={{ flex: "auto" }}
+                      placeholder="Add new primary content type"
+                      value={newPrimaryContentType}
+                      onChange={(e) => setNewPrimaryContentType(e.target.value)}
+                      onPressEnter={handleAddPrimaryContentType}
+                    />
+                    <Button
+                      type="primary"
+                      icon={
+                        addingPrimaryContentType ? (
+                          <LoadingOutlined />
+                        ) : (
+                          <PlusOutlined />
+                        )
+                      }
+                      onClick={handleAddPrimaryContentType}
+                    >
+                      {addingPrimaryContentType ? "Adding..." : "Add"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            >
+              {primaryContentTypes.map((type) => (
                 <Option key={type.value} value={type.value}>
                   {type.label}
                 </Option>
@@ -447,9 +539,6 @@ const AddContent = () => {
           <Form.Item
             label="Content Type"
             name="contentType"
-            rules={[
-              { required: true, message: "Please select a content type!" },
-            ]}
           >
             <Select
               placeholder={
@@ -572,7 +661,6 @@ const AddContent = () => {
             </Button>
           </Form.Item>
 
-          {/* Added Links to Dashboard */}
           <div className="additional-links">
             <Link to="/dashboard/allowusers" style={{ marginRight: 20 }}>
               Manage Users
