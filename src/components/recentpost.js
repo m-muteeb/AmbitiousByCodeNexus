@@ -76,7 +76,7 @@ const RecentPosts = () => {
               <Col key={post.topicId} xs={12} sm={6} md={4}>
                 {firstFileUrl ? (
                   <Link
-                    to={`/preview?url=${encodeURIComponent(firstFileUrl)}&title=${encodeURIComponent(post.topic)}`}
+                   to={`/preview?url=${firstFileUrl}&title=${encodeURIComponent(post.topic)}`}
                     className="recent-post-link"
                   >
                     <Card className="recent-post-card h-100">

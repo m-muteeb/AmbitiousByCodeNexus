@@ -14,11 +14,22 @@ import {
   LoadingOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { fireStore } from "../../config/firebase";
-import { supabase } from "../../config/supabase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, getDocs } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "../../config/supabase";
+import {
+  fetchClasses,
+  fetchSubjects,
+  fetchContentTypes,
+  fetchEcatContentTypes,
+  fetchPrimaryContentTypes,
+  handleAddClass,
+  handleAddSubject,
+  handleAddContentType,
+  handleAddEcatContentType,
+  handleAddPrimaryContentType,
+} from "../../utils/addfunctions";
+import { collection, addDoc } from "firebase/firestore";
+import { fireStore } from "../../config/firebase";
 import "../../assets/css/addtopic.css";
 
 const { Option } = Select;
@@ -32,7 +43,7 @@ const AddContent = () => {
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [addingClass, setAddingClass] = useState(false);
   const [newClass, setNewClass] = useState("");
-  const [isPaid, setIsPaid] = useState(false); // Toggle for paid content
+  const [isPaid, setIsPaid] = useState(false);
   const [form] = Form.useForm();
   const [contentTypes, setContentTypes] = useState([]);
   const [newContentType, setNewContentType] = useState("");
@@ -45,222 +56,18 @@ const AddContent = () => {
   const [addingEcatContentType, setAddingEcatContentType] = useState(false);
   const [primaryContentTypes, setPrimaryContentTypes] = useState([]);
   const [newPrimaryContentType, setNewPrimaryContentType] = useState("");
-  const [addingPrimaryContentType, setAddingPrimaryContentType] =
-    useState(false);
+  const [addingPrimaryContentType, setAddingPrimaryContentType] = useState(false);
 
   useEffect(() => {
-    const fetchClasses = async () => {
-      const querySnapshot = await getDocs(collection(fireStore, "classes"));
-      const fetchedClasses = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name,
-      }));
-      setClasses(fetchedClasses);
-
-      const draft = JSON.parse(localStorage.getItem("draft"));
-      if (draft) {
-        setDescription(draft.description || "");
-        form.setFieldsValue(draft);
-      }
-    };
-
-    fetchClasses();
+    fetchClasses(form, setClasses, setDescription);
   }, [form]);
 
   useEffect(() => {
-    const fetchContentTypes = async () => {
-      try {
-        const querySnapshot = await getDocs(
-          collection(fireStore, "contentTypes")
-        );
-        const types = querySnapshot.docs.map((doc) => ({
-          label: doc.data().label,
-          value: doc.data().value,
-        }));
-        setContentTypes(types);
-      } catch (error) {
-        console.error("Failed to fetch content types:", error);
-        message.error("Error loading content types.");
-      }
-    };
-
-    fetchContentTypes();
+    fetchContentTypes(setContentTypes);
+    fetchSubjects(setSubjects);
+    fetchEcatContentTypes(setEcatContentTypes);
+    fetchPrimaryContentTypes(setPrimaryContentTypes);
   }, []);
-
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(fireStore, "subjects"));
-        const fetchedSubjects = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          name: doc.data().name,
-        }));
-        setSubjects(fetchedSubjects);
-      } catch (error) {
-        console.error("Failed to fetch subjects:", error);
-        message.error("Error loading subjects.");
-      }
-    };
-
-    fetchSubjects();
-  }, []);
-
-  useEffect(() => {
-    const fetchEcatContentTypes = async () => {
-      try {
-        const querySnapshot = await getDocs(
-          collection(fireStore, "ecatContentTypes")
-        );
-        const types = querySnapshot.docs.map((doc) => ({
-          label: doc.data().label,
-          value: doc.data().value,
-        }));
-        setEcatContentTypes(types);
-      } catch (error) {
-        console.error("Failed to fetch ECAT content types:", error);
-        message.error("Error loading ECAT content types.");
-      }
-    };
-
-    fetchEcatContentTypes();
-  }, []);
-  useEffect(() => {
-    const fetchPrimaryContentTypes = async () => {
-      try {
-        const querySnapshot = await getDocs(
-          collection(fireStore, "primaryContentTypes")
-        );
-        const types = querySnapshot.docs.map((doc) => ({
-          label: doc.data().label,
-          value: doc.data().value,
-        }));
-        setPrimaryContentTypes(types);
-      } catch (error) {
-        console.error("Failed to fetch primary content types:", error);
-        message.error("Error loading primary content types.");
-      }
-    };
-
-    fetchPrimaryContentTypes();
-  }, []);
-
-  const handleAddEcatContentType = async () => {
-    if (
-      newEcatContentType &&
-      !ecatContentTypes.some(
-        (type) =>
-          type.label.toLowerCase() === newEcatContentType.toLowerCase() ||
-          type.value.toLowerCase() === newEcatContentType.toLowerCase()
-      )
-    ) {
-      setAddingEcatContentType(true);
-      try {
-        const newType = {
-          label: newEcatContentType,
-          value: newEcatContentType.toLowerCase().replace(/\s+/g, "-"),
-        };
-
-        await addDoc(collection(fireStore, "ecatContentTypes"), newType);
-        setEcatContentTypes([...ecatContentTypes, newType]);
-        setNewEcatContentType("");
-
-        // 👇 Set the newly added type as selected in the form
-        form.setFieldsValue({ ecatContentType: newType.value });
-
-        message.success(`ECAT content type "${newType.label}" added!`);
-      } catch (e) {
-        console.error("Error adding ECAT content type:", e);
-        message.error("Failed to add ECAT content type.");
-      } finally {
-        setAddingEcatContentType(false);
-      }
-    }
-  };
-
-  const handleAddPrimaryContentType = async () => {
-    if (
-      newPrimaryContentType &&
-      !primaryContentTypes.some(
-        (type) =>
-          type.label.toLowerCase() === newPrimaryContentType.toLowerCase() ||
-          type.value.toLowerCase() === newPrimaryContentType.toLowerCase()
-      )
-    ) {
-      setAddingPrimaryContentType(true);
-      try {
-        const newType = {
-          label: newPrimaryContentType,
-          value: newPrimaryContentType.toLowerCase().replace(/\s+/g, "-"),
-        };
-
-        await addDoc(collection(fireStore, "primaryContentTypes"), newType);
-        setPrimaryContentTypes([...primaryContentTypes, newType]);
-        setNewPrimaryContentType("");
-
-        form.setFieldsValue({ primaryContentType: newType.value });
-
-        message.success(`Primary content type "${newType.label}" added!`);
-      } catch (e) {
-        console.error("Error adding primary content type:", e);
-        message.error("Failed to add primary content type.");
-      } finally {
-        setAddingPrimaryContentType(false);
-      }
-    }
-  };
-
-  const handleAddContentType = async () => {
-    if (
-      newContentType &&
-      !contentTypes.some(
-        (type) =>
-          type.label.toLowerCase() === newContentType.toLowerCase() ||
-          type.value.toLowerCase() === newContentType.toLowerCase()
-      )
-    ) {
-      setAddingContentType(true);
-      try {
-        const newType = {
-          label: newContentType,
-          value: newContentType.toLowerCase().replace(/\s+/g, "-"),
-        };
-
-        await addDoc(collection(fireStore, "contentTypes"), newType);
-        setContentTypes([...contentTypes, newType]);
-        setNewContentType("");
-        message.success(`Content type "${newType.label}" added!`);
-      } catch (e) {
-        console.error("Error adding content type:", e);
-        message.error("Failed to add content type.");
-      } finally {
-        setAddingContentType(false);
-      }
-    }
-  };
-
-  const handleAddSubject = async () => {
-    if (
-      newSubject &&
-      !subjects.some(
-        (sub) => sub.name.toLowerCase() === newSubject.toLowerCase()
-      )
-    ) {
-      setAddingSubject(true);
-      try {
-        const docRef = await addDoc(collection(fireStore, "subjects"), {
-          name: newSubject,
-        });
-        setSubjects([...subjects, { id: docRef.id, name: newSubject }]);
-        setNewSubject("");
-        message.success(`Subject "${newSubject}" added successfully!`, 3);
-      } catch (e) {
-        console.error("Error adding subject:", e);
-        message.error("Failed to add subject.", 3);
-      } finally {
-        setAddingSubject(false);
-      }
-    }
-  };
 
   const onFinish = async (values) => {
     const {
@@ -285,11 +92,7 @@ const AddContent = () => {
               upsert: false,
             });
 
-          if (error) {
-            console.error("Upload failed:", error.message);
-            message.error("File upload failed.", 3);
-            throw error;
-          }
+          if (error) throw error;
 
           const {
             data: { publicUrl },
@@ -312,7 +115,6 @@ const AddContent = () => {
         isPaid: isPaid,
         timestamp: new Date(),
       };
-      console.log("Topic Data:", topicData);
 
       await addDoc(collection(fireStore, "topics"), topicData);
 
@@ -333,33 +135,11 @@ const AddContent = () => {
     }
   };
 
-  const handleAddClass = async () => {
-    if (newClass && !classes.some((cls) => cls.name === newClass)) {
-      setAddingClass(true);
-      try {
-        const docRef = await addDoc(collection(fireStore, "classes"), {
-          name: newClass,
-        });
-        setClasses([...classes, { id: docRef.id, name: newClass }]);
-        setNewClass("");
-        message.success(`Class "${newClass}" added successfully!`, 3);
-      } catch (e) {
-        console.error("Error adding class:", e);
-        message.error("Failed to add class.", 3);
-      } finally {
-        setAddingClass(false);
-      }
-    }
-  };
-
   return (
     <div className="form-container mt-2">
       <h1 className="text-center mb-2 py-5">Create New Topic</h1>
 
-      <Card
-        bordered={false}
-        style={{ margin: "20px auto", width: "100%", borderRadius: "10px" }}
-      >
+      <Card bordered={false} style={{ margin: "20px auto", width: "100%", borderRadius: "10px" }}>
         <Form
           layout="vertical"
           onFinish={onFinish}
@@ -673,3 +453,25 @@ const AddContent = () => {
 };
 
 export default AddContent;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
