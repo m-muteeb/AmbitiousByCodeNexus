@@ -1,0 +1,105 @@
+/* AdminUserList.css */
+
+.admin-dashboard-container {
+  padding: 40px;
+  max-width: 1200px;
+  margin: auto;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin-top: 75px;
+  color: #fff;
+
+  min-height: 100vh;
+}
+
+.admin-title {
+  font-size: 32px;
+  color: #0d47a1;
+  margin-bottom: 50px;
+  font-weight: 700;
+  text-shadow: 0 2px 5px rgba(13, 71, 161, 0.7);
+}
+
+.card-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 60px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #000000;
+  padding: 35px 25px;
+  width: 280px;
+  height: 180px;
+  cursor: pointer;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.08);
+  box-shadow: 0 15px 50px rgba(31, 38, 135, 0.85);
+  opacity: 1;
+}
+
+.card-icon {
+  font-size: 52px;
+  margin-bottom: 18px;
+  color: #b8c1ff;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 26px;
+  margin-bottom: 15px;
+  color: #000000;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.user-count {
+  font-size: 24px;
+  font-weight: 600;
+  color: #f30606;
+  letter-spacing: 0.06em;
+  
+}
+
+/* Add Topic Button */
+.add-topic-btn {
+  background-color: #0d47a1;
+  color: white;
+  padding: 12px 28px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(13, 71, 161, 0.4);
+  transition: background-color 0.3s ease;
+  margin-top: 30px;
+}
+
+.add-topic-btn:hover {
+  background-color: #08306b;
+}
+
+/* Graph container */
+.graph-container {
+  max-width: 700px;
+  margin: 0 auto 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 30px;
+  box-shadow: 0 8px 40px rgba(31, 38, 135, 0.25);
+}

@@ -158,3 +158,324 @@ const cellStyle = {
 };
 
 export default RoleChangedUsers;
+
+
+
+
+
+
+
+/// this is also premium
+
+
+// import React, { useEffect, useState } from 'react';
+// import {
+//   collection,
+//   getDocs,
+//   updateDoc,
+//   deleteDoc,
+//   doc
+// } from 'firebase/firestore';
+// import {
+//   ref,
+//   uploadBytesResumable,
+//   getDownloadURL
+// } from 'firebase/storage';
+// import { db, storage } from '../../config/firebase';
+
+// const RoleChangedUsers = ({ goBack }) => {
+//   const [users, setUsers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [editingUserId, setEditingUserId] = useState(null);
+//   const [editedUsers, setEditedUsers] = useState({});
+//   const [selectedRoles, setSelectedRoles] = useState({});
+//   const [updatingId, setUpdatingId] = useState(null);
+
+//   useEffect(() => {
+//     fetchUsers();
+//   }, []);
+
+//   const fetchUsers = async () => {
+//     setLoading(true);
+//     try {
+//       const querySnapshot = await getDocs(collection(db, 'users'));
+//       const filteredUsers = querySnapshot.docs
+//         .map(doc => ({ id: doc.id, ...doc.data() }))
+//         .filter(user => user.role === 'admin' || user.role === 'premium');
+
+//       const roleMap = {};
+//       const editMap = {};
+//       filteredUsers.forEach(user => {
+//         roleMap[user.id] = user.role;
+//         editMap[user.id] = { ...user, logoFile: null }; // Add file field
+//       });
+
+//       setSelectedRoles(roleMap);
+//       setEditedUsers(editMap);
+//       setUsers(filteredUsers);
+//     } catch (err) {
+//       console.error('Error fetching users:', err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleRoleChange = (userId, newRole) => {
+//     setSelectedRoles(prev => ({ ...prev, [userId]: newRole }));
+//     setEditedUsers(prev => ({
+//       ...prev,
+//       [userId]: {
+//         ...prev[userId],
+//         role: newRole
+//       }
+//     }));
+//   };
+
+//   const handleEditChange = (userId, field, value) => {
+//     setEditedUsers(prev => ({
+//       ...prev,
+//       [userId]: {
+//         ...prev[userId],
+//         [field]: value
+//       }
+//     }));
+//   };
+
+//   const handleLogoChange = (userId, file) => {
+//     setEditedUsers(prev => ({
+//       ...prev,
+//       [userId]: {
+//         ...prev[userId],
+//         logoFile: file
+//       }
+//     }));
+//   };
+
+//   const updateUser = async (userId) => {
+//     setUpdatingId(userId);
+//     const user = editedUsers[userId];
+
+//     try {
+//       let logoUrl = user.logoUrl;
+//       if (user.logoFile) {
+//         const logoRef = ref(storage, `logos/${user.logoFile.name}`);
+//         const uploadTask = uploadBytesResumable(logoRef, user.logoFile);
+//         await uploadTask;
+//         logoUrl = await getDownloadURL(logoRef);
+//       }
+
+//       const updatedData = {
+//         institutionName: user.institutionName,
+//         email: user.email,
+//         phoneNumber: user.phoneNumber,
+//         address: user.address,
+//         role: user.role,
+//         logoUrl
+//       };
+
+//       await updateDoc(doc(db, 'users', userId), updatedData);
+//       setEditingUserId(null);
+//       await fetchUsers();
+//     } catch (err) {
+//       console.error('Error updating user:', err);
+//     } finally {
+//       setUpdatingId(null);
+//     }
+//   };
+
+//   const deleteUser = async (userId) => {
+//     const confirmDelete = window.confirm('Are you sure you want to delete this user?');
+//     if (!confirmDelete) return;
+
+//     try {
+//       await deleteDoc(doc(db, 'users', userId));
+//       setUsers(prev => prev.filter(u => u.id !== userId));
+//     } catch (err) {
+//       console.error('Error deleting user:', err);
+//     }
+//   };
+
+//   if (loading) return <p>Loading users...</p>;
+//   if (!users.length) return <p>No users with roles "admin" or "premium" found.</p>;
+
+//   return (
+//     <div style={{ overflowX: 'auto' }}>
+//       <button
+//         onClick={goBack}
+//         style={{
+//           marginBottom: '15px',
+//           backgroundColor: '#1976d2',
+//           color: 'white',
+//           padding: '8px 16px',
+//           border: 'none',
+//           borderRadius: '5px',
+//           cursor: 'pointer'
+//         }}
+//       >
+//         ⬅ Back
+//       </button>
+
+//       <table style={tableStyle}>
+//         <thead>
+//           <tr style={headerStyle}>
+//             <th style={cellStyle}>#</th>
+//             <th style={cellStyle}>Logo</th>
+//             <th style={cellStyle}>Institution</th>
+//             <th style={cellStyle}>Email</th>
+//             <th style={cellStyle}>Phone</th>
+//             <th style={cellStyle}>Address</th>
+//             <th style={cellStyle}>Role</th>
+//             <th style={cellStyle}>Actions</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           {users.map((user, idx) => {
+//             const isEditing = editingUserId === user.id;
+//             const edited = editedUsers[user.id] || {};
+//             return (
+//               <tr key={user.id} style={{ textAlign: 'center', borderBottom: '1px solid #ddd' }}>
+//                 <td style={cellStyle}>{idx + 1}</td>
+//                 <td style={cellStyle}>
+//                   <img
+//                     src={edited.logoUrl || 'https://via.placeholder.com/40'}
+//                     alt="logo"
+//                     style={{ width: 40, height: 40, borderRadius: '50%' }}
+//                   />
+//                   {isEditing && (
+//                     <input type="file" onChange={(e) => handleLogoChange(user.id, e.target.files[0])} />
+//                   )}
+//                 </td>
+//                 <td style={cellStyle}>
+//                   {isEditing ? (
+//                     <input
+//                       value={edited.institutionName}
+//                       onChange={(e) => handleEditChange(user.id, 'institutionName', e.target.value)}
+//                     />
+//                   ) : (
+//                     user.institutionName
+//                   )}
+//                 </td>
+//                 <td style={cellStyle}>
+//                   {isEditing ? (
+//                     <input
+//                       value={edited.email}
+//                       onChange={(e) => handleEditChange(user.id, 'email', e.target.value)}
+//                     />
+//                   ) : (
+//                     user.email
+//                   )}
+//                 </td>
+//                 <td style={cellStyle}>
+//                   {isEditing ? (
+//                     <input
+//                       value={edited.phoneNumber}
+//                       onChange={(e) => handleEditChange(user.id, 'phoneNumber', e.target.value)}
+//                     />
+//                   ) : (
+//                     user.phoneNumber
+//                   )}
+//                 </td>
+//                 <td style={cellStyle}>
+//                   {isEditing ? (
+//                     <input
+//                       value={edited.address}
+//                       onChange={(e) => handleEditChange(user.id, 'address', e.target.value)}
+//                     />
+//                   ) : (
+//                     user.address
+//                   )}
+//                 </td>
+//                 <td style={cellStyle}>
+//                   <select
+//                     value={selectedRoles[user.id]}
+//                     onChange={(e) => handleRoleChange(user.id, e.target.value)}
+//                     style={selectStyle}
+//                     disabled={!isEditing}
+//                   >
+//                     <option value="admin">Demo</option>
+//                     <option value="premium">Premium</option>
+//                   </select>
+//                 </td>
+//                 <td style={cellStyle}>
+//                   {isEditing ? (
+//                     <>
+//                       <button
+//                         onClick={() => updateUser(user.id)}
+//                         style={actionBtnStyle}
+//                         disabled={updatingId === user.id}
+//                       >
+//                         {updatingId === user.id ? 'Saving...' : 'Save'}
+//                       </button>
+//                       <button
+//                         onClick={() => setEditingUserId(null)}
+//                         style={{ ...actionBtnStyle, backgroundColor: '#888' }}
+//                       >
+//                         Cancel
+//                       </button>
+//                     </>
+//                   ) : (
+//                     <>
+//                       <button
+//                         onClick={() => setEditingUserId(user.id)}
+//                         style={actionBtnStyle}
+//                       >
+//                         Edit
+//                       </button>
+//                       <button
+//                         onClick={() => deleteUser(user.id)}
+//                         style={{ ...actionBtnStyle, backgroundColor: '#d9534f' }}
+//                       >
+//                         Delete
+//                       </button>
+//                     </>
+//                   )}
+//                 </td>
+//               </tr>
+//             );
+//           })}
+//         </tbody>
+//       </table>
+//     </div>
+//   );
+// };
+
+// // Styles
+// const cellStyle = {
+//   padding: '10px',
+//   fontSize: '14px'
+// };
+
+// const tableStyle = {
+//   width: '100%',
+//   borderCollapse: 'collapse',
+//   backgroundColor: 'white',
+//   borderRadius: '8px',
+//   boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+//   fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+// };
+
+// const headerStyle = {
+//   backgroundColor: '#1976d2',
+//   color: 'white',
+//   textAlign: 'center'
+// };
+
+// const selectStyle = {
+//   padding: '5px 10px',
+//   borderRadius: '5px',
+//   border: '1px solid #ccc',
+//   fontSize: '13px'
+// };
+
+// const actionBtnStyle = {
+//   padding: '6px 10px',
+//   margin: '0 3px',
+//   backgroundColor: '#1976d2',
+//   color: 'white',
+//   border: 'none',
+//   borderRadius: '5px',
+//   fontSize: '13px',
+//   cursor: 'pointer'
+// };
+
+// export default RoleChangedUsers;

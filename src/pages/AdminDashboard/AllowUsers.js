@@ -206,3 +206,176 @@ const AdminUserList = () => {
 };
 
 export default AdminUserList;
+
+
+
+//Thi code will be uncommited when the things will finalied
+// import React, { useState, useEffect } from 'react';
+// import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+// import { db } from '../../config/firebase';
+// import RoleNotChangedUsers from './RoleNotChangedUsers';
+// import RoleChangedUsers from './RoleChangedUsers';
+// import PremiumUsers from './PremiumUser';
+// import { FaUserCog, FaUserCheck, FaUserShield } from 'react-icons/fa';
+// import { useNavigate } from 'react-router-dom';
+
+// const AdminUserList = () => {
+//   const [activeTab, setActiveTab] = useState(null);
+//   const [counts, setCounts] = useState({ notChanged: 0, changed: 0, premium: 0 });
+//   const [loading, setLoading] = useState(true);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     window.scrollTo(0, 0);
+//   }, [activeTab]);
+
+//   useEffect(() => {
+//     const fetchUserCounts = async () => {
+//       setLoading(true);
+//       try {
+//         const usersRef = collection(db, 'users');
+
+//         const notChangedQuery = query(usersRef, where('role', '==', 'user'));
+//         const changedQuery = query(usersRef, where('role', 'in', ['admin']));
+//         const premiumQuery = query(usersRef, where('role', '==', 'premium'));
+
+//         const [notChangedSnapshot, changedSnapshot, premiumSnapshot] = await Promise.all([
+//           getCountFromServer(notChangedQuery),
+//           getCountFromServer(changedQuery),
+//           getCountFromServer(premiumQuery),
+//         ]);
+
+//         setCounts({
+//           notChanged: notChangedSnapshot.data().count,
+//           changed: changedSnapshot.data().count,
+//           premium: premiumSnapshot.data().count,
+//         });
+//       } catch (err) {
+//         console.error('Error fetching user counts:', err);
+//       }
+//       setLoading(false);
+//     };
+
+//     fetchUserCounts();
+//   }, []);
+
+//   return (
+//     <div className="admin-dashboard-container">
+//       <style>{`
+//         .admin-dashboard-container {
+//           padding: 40px 20px;
+//           max-width: 1200px;
+//           margin: auto;
+//           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+//           margin-top: 40px;
+//         }
+
+//         .admin-title {
+//           font-size: 32px;
+//           color: #0d47a1;
+//           font-weight: bold;
+//           text-align: center;
+//           margin-bottom: 40px;
+//         }
+
+//         .card-container {
+//           display: grid;
+//           grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+//           gap: 24px;
+//         }
+
+//         .card {
+//           background: linear-gradient(145deg, #1976d2, #42a5f5);
+//           color: white;
+//           padding: 24px;
+//           border-radius: 16px;
+//           box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+//           transition: all 0.3s ease-in-out;
+//           cursor: pointer;
+//           text-align: center;
+//         }
+
+//         .card:hover {
+//           transform: scale(1.05);
+//           background: linear-gradient(145deg, #1565c0, #1e88e5);
+//         }
+
+//         .card-icon {
+//           font-size: 40px;
+//           margin-bottom: 12px;
+//         }
+
+//         .card h3 {
+//           margin: 8px 0;
+//           font-size: 20px;
+//         }
+
+//         .user-count {
+//           font-size: 24px;
+//           font-weight: bold;
+//         }
+
+//         .add-topic-btn {
+//           display: block;
+//           margin: 30px auto 0;
+//           background-color: #0d47a1;
+//           color: #fff;
+//           padding: 12px 28px;
+//           border-radius: 8px;
+//           border: none;
+//           font-size: 16px;
+//           transition: background 0.3s ease;
+//         }
+
+//         .add-topic-btn:hover {
+//           background-color: #1565c0;
+//         }
+
+//         @media (max-width: 600px) {
+//           .admin-title {
+//             font-size: 24px;
+//           }
+//         }
+//       `}</style>
+
+//       <h2 className="admin-title">Registered Institutions</h2>
+
+//       {!activeTab && (
+//         <div className="card-container">
+//           <div className="card" onClick={() => setActiveTab('notChanged')}>
+//             <FaUserCog className="card-icon" />
+//             <h3>Role Not Changed Users</h3>
+//             <div className="user-count">{loading ? '...' : counts.notChanged}</div>
+//           </div>
+
+//           <div className="card" onClick={() => setActiveTab('changed')}>
+//             <FaUserCheck className="card-icon" />
+//             <h3>Role Changed Users</h3>
+//             <div className="user-count">{loading ? '...' : counts.changed}</div>
+//           </div>
+
+//           <div className="card" onClick={() => setActiveTab('premium')}>
+//             <FaUserShield className="card-icon" />
+//             <h3>Premium Users</h3>
+//             <div className="user-count">{loading ? '...' : counts.premium}</div>
+//           </div>
+//         </div>
+//       )}
+
+//       {activeTab === 'notChanged' && <RoleNotChangedUsers goBack={() => setActiveTab(null)} />}
+//       {activeTab === 'changed' && <RoleChangedUsers goBack={() => setActiveTab(null)} />}
+//       {activeTab === 'premium' && <PremiumUsers goBack={() => setActiveTab(null)} />}
+
+//       {!activeTab && (
+//         <button
+//           onClick={() => navigate('/dashboard/addcontent')}
+//           className="add-topic-btn"
+//         >
+//           Add Topic
+//         </button>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default AdminUserList;

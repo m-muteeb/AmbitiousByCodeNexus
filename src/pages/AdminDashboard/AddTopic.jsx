@@ -265,7 +265,7 @@ const AddContent = () => {
         // Changed collection name here only
         await addDoc(collection(fireStore, "institutionpdfs"), topicData);
       }
-
+ 
       message.success("Topic created successfully!", 3);
       localStorage.removeItem("draft");
       form.resetFields();

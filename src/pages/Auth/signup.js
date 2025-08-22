@@ -67,50 +67,68 @@ const SignupPage = () => {
       {showPopup && (
         <div style={styles.popupOverlay}>
           <div style={styles.popupBox}>
-            <h3>Important Instructions</h3>
-            <ul>
-              <li>Fill out all the fields in the form below.</li>
-              <li>Pay the registration fee through our <strong>JazzCash</strong> account.</li>
-              <li>Send us a <strong>WhatsApp message with your payment details</strong>.</li>
-              <li>
-                <span style={{ color: 'red', fontWeight: 'bold' }}>
-                  You will get access to all PDFs within 24 hours. This process is only one time.
-                </span>
+            <h3>📢 Important Instructions</h3>
+            <ul style={{ paddingLeft: '1rem' }}>
+              <li style={{ fontWeight: 'bold', fontSize: '18px' }}>🔥 Premium Access</li>
+              <li>Fill out all fields in the form below.</li>
+              <li>Pay the registration fee via <strong>JazzCash</strong>.</li>
+              <li>Send your <strong>payment proof via WhatsApp</strong>.</li>
+              <li style={{ color: 'red', fontWeight: 'bold' }}>
+                You will get access to all PDFs within 24 hours. This is a one-time process.
               </li>
-              <li>After registration, just login anytime to get modified PDFs.</li>
+              <li>After registration, just login anytime to access all modified PDFs.</li>
+
+              <br />
+
+              <li style={{ fontWeight: 'bold', fontSize: '18px' }}>🧪 Demo Access</li>
+              <li>Enter all required fields in the form below.</li>
+              <li style={{ color: 'orange', fontWeight: 'bold' }}>
+                Missing any field will prevent demo test downloads.
+              </li>
+              <li>You will get access within 24 hours. Until then, "Access Denied" may appear.</li>
+              <li>For queries, contact us via WhatsApp.</li>
             </ul>
-            <button onClick={() => setShowPopup(false)} style={styles.popupButton}>
-              I Understand
-            </button>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setShowPopup(false)} style={styles.popupButton}>
+                I Understand
+              </button>
+              <Link to="/faqs" style={{ ...styles.popupButton, marginLeft: 'auto', textDecoration: 'none' }}>
+                Want to Learn More
+              </Link>
+            </div>
           </div>
         </div>
       )}
 
       <div style={styles.formWrapper}>
-        <h2 style={styles.title}>Sign Up</h2>
+        <h2 style={styles.title}>Institution Sign Up</h2>
         <p style={styles.note}>
-          All fields must be filled correctly as they can't be changed afterward.
+          All fields must be filled correctly as they will appear on your PDFs and cannot be changed later.
         </p>
 
         {error && <p style={styles.error}>{error}</p>}
 
         <form onSubmit={handleSignup} style={styles.form}>
+          <label style={styles.label}>Institution Name</label>
           <input
             type="text"
-            placeholder="Institution Name"
             value={institutionName}
             onChange={(e) => setInstitutionName(e.target.value)}
             required
             style={styles.input}
           />
+
+          <label style={styles.label}>Email</label>
           <input
             type="email"
-            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             style={styles.input}
           />
+
+          <label style={styles.label}>Upload Your Logo</label>
           <input
             type="file"
             accept="image/*"
@@ -118,33 +136,37 @@ const SignupPage = () => {
             required
             style={styles.input}
           />
+
+          <label style={styles.label}>Address</label>
           <input
             type="text"
-            placeholder="Address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             required
             style={styles.input}
           />
+
+          <label style={styles.label}>Phone Number</label>
           <input
             type="tel"
-            placeholder="Phone Number"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
             required
             style={styles.input}
           />
+
+          <label style={styles.label}>Password</label>
           <input
             type="password"
-            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             style={styles.input}
           />
+
+          <label style={styles.label}>Re-type Password</label>
           <input
             type="password"
-            placeholder="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
@@ -157,7 +179,7 @@ const SignupPage = () => {
         </form>
 
         <div style={styles.links}>
-          <p style={{ marginTop: '1rem' }}>
+          <p>
             Already have an account? <Link to="/auth/login" style={styles.link}>Login</Link>
           </p>
         </div>
@@ -173,42 +195,49 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     padding: '1rem',
+    minHeight: '100vh',
   },
   formWrapper: {
     background: '#fff',
-    padding: '3rem',
+    padding: '2.5rem',
     borderRadius: '10px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
     width: '100%',
-    maxWidth: '900px',
-    marginTop: '6rem',
+    maxWidth: '800px',
+    marginTop: '4rem',
     marginBottom: '2rem',
   },
   title: {
     textAlign: 'center',
-    marginBottom: '1.5rem',
-    color: '#333',
+    marginBottom: '1rem',
+    color: '#003f88',
   },
   note: {
     textAlign: 'center',
-    marginBottom: '1rem',
-    color: '#e04a4a',
-    fontSize: '0.9rem',
+    marginBottom: '1.5rem',
+    color: '#d9534f',
+    fontSize: '0.95rem',
     fontWeight: 'bold',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
   },
+  label: {
+    marginBottom: '0.3rem',
+    fontWeight: '500',
+    color: '#444',
+    fontSize: '0.9rem',
+  },
   input: {
-    padding: '0.75rem 1rem',
-    marginBottom: '1rem',
+    padding: '0.75rem',
+    marginBottom: '1.2rem',
     borderRadius: '5px',
     border: '1px solid #ccc',
     fontSize: '1rem',
   },
   button: {
-    padding: '0.75rem 1rem',
+    padding: '0.8rem',
     backgroundColor: '#003f88',
     color: '#fff',
     fontSize: '1rem',
@@ -217,13 +246,13 @@ const styles = {
     cursor: 'pointer',
   },
   links: {
-    marginTop: '1rem',
+    marginTop: '1.5rem',
     textAlign: 'center',
   },
   link: {
     color: '#003f88',
     textDecoration: 'none',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   error: {
     color: 'red',
@@ -231,7 +260,7 @@ const styles = {
     textAlign: 'center',
   },
 
-  // Popup styles
+  // Popup
   popupOverlay: {
     position: 'fixed',
     top: 0, left: 0, right: 0, bottom: 0,
