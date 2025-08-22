@@ -76,7 +76,9 @@ const Notes = () => {
         collection(fireStore, "topics"),
         where("class", "==", selectedClass),
         where("subject", "==", subject.trim().toLowerCase()),
-        where("contentType", "==", contentType.trim().toLowerCase())
+        where("contentType", "==", contentType.trim().toLowerCase()),
+        where("isPaid", "==", false)
+        // where("isPaid", "in", [false, null]) check if this not work comment first and use secon
       );
 
       console.log("Fetching topics with query:", q);
