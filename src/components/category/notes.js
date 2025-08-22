@@ -16,8 +16,8 @@ const subjects = [
   "tarjma-tul-quran",
   "pak-studies",
   "ecat-prep",
+  "scheme-of-study"
 ];
-
 
 const Notes = () => {
   const { selectedClass, subject, contentType } = useParams();
@@ -28,9 +28,9 @@ const Notes = () => {
   const [activeContentType, setActiveContentType] = useState(contentType);
   const [contentTypes, setContentTypes] = useState([]);
 
-   useEffect(() => {
-      window.scrollTo(0, 0);
-    }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Sync state with URL
   useEffect(() => {
@@ -39,13 +39,16 @@ const Notes = () => {
         (s) => s.toLowerCase() === subject.toLowerCase()
       );
       setOpenSubjectId(subjectId >= 0 ? subjectId : null);
+      
+      // If it's scheme-of-study, fetch topics directly
+      if (subject.toLowerCase() === "scheme-of-study") {
+        fetchSchemeOfStudyTopics(subject);
+      }
     }
-    if (contentType && subject) {
+    if (contentType && subject && subject.toLowerCase() !== "scheme-of-study") {
       setActiveContentType(contentType);
       fetchTopics(subject, contentType);
     }
-
-    
   }, [subject, contentType, selectedClass]);
 
   useEffect(() => {
@@ -61,8 +64,8 @@ const Notes = () => {
     };
 
     fetchContentTypes();
-  }
-  , []);
+  }, []);
+
   const fetchTopics = async (subject, contentType) => {
     setLoading(true);
     try {
@@ -78,7 +81,6 @@ const Notes = () => {
         where("subject", "==", subject.trim().toLowerCase()),
         where("contentType", "==", contentType.trim().toLowerCase()),
         where("isPaid", "==", false)
-        // where("isPaid", "in", [false, null]) check if this not work comment first and use secon
       );
 
       console.log("Fetching topics with query:", q);
@@ -102,6 +104,38 @@ const Notes = () => {
     setLoading(false);
   };
 
+  // New function specifically for scheme-of-study
+  const fetchSchemeOfStudyTopics = async (subject) => {
+    setLoading(true);
+    try {
+      console.log("Fetching scheme-of-study topics for subject:", subject);
+      
+      // Query without contentType filter for scheme-of-study
+      const q = query(
+        collection(fireStore, "topics"),
+        where("class", "==", selectedClass),
+        where("subject", "==", subject.trim().toLowerCase()),
+        where("isPaid", "==", false)
+      );
+
+      console.log("Fetching scheme-of-study topics with query:", q);
+      console.log("Selected Class:", selectedClass);
+      console.log("Subject:", subject.trim().toLowerCase());
+
+      const snapshot = await getDocs(q);
+      const topicData = {};
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.topic) topicData[data.topic] = data.fileUrls || [];
+      });
+      console.log("Fetched scheme-of-study topics:", topicData);
+      setTopics(topicData);
+    } catch (error) {
+      console.error("Error fetching scheme-of-study topics:", error);
+    }
+    setLoading(false);
+  };
+
   const handleSubjectClick = (subjectName, index) => {
     console.log(
       "Current openSubjectId:",
@@ -116,6 +150,11 @@ const Notes = () => {
 
     if (newOpenId !== null) {
       navigate(`/notes/${selectedClass}/${subjectName.toLowerCase()}`);
+      
+      // If it's scheme-of-study, fetch topics directly
+      if (subjectName.toLowerCase() === "scheme-of-study") {
+        fetchSchemeOfStudyTopics(subjectName);
+      }
     } else {
       navigate(`/notes/${selectedClass}`);
     }
@@ -132,28 +171,88 @@ const Notes = () => {
     fetchTopics(subjectName, type);
   };
 
-
-
   const handleTopicClick = (topicName) => {
-  const fileData = topics[topicName]?.[0];
+    const fileData = topics[topicName]?.[0];
 
-  let fileUrl = "";
+    let fileUrl = "";
 
-  if (typeof fileData === "string") {
-    fileUrl = fileData;
-  } else if (fileData && typeof fileData === "object") {
-    fileUrl = fileData.url || fileData.fileUrl || "";
-  }
+    if (typeof fileData === "string") {
+      fileUrl = fileData;
+    } else if (fileData && typeof fileData === "object") {
+      fileUrl = fileData.url || fileData.fileUrl || "";
+    }
 
-  if (fileUrl && typeof fileUrl === "string") {
-    navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
-  } else {
-    console.warn("No valid file URL found for topic:", topicName);
-  }
-};
+    if (fileUrl && typeof fileUrl === "string") {
+      navigate(`/preview?url=${encodeURIComponent(fileUrl)}`);
+    } else {
+      console.warn("No valid file URL found for topic:", topicName);
+    }
+  };
 
-  
-  
+  const renderSubjectContent = (subjectName, index) => {
+    const isSchemeOfStudy = subjectName.toLowerCase() === "scheme-of-study";
+    
+    if (isSchemeOfStudy) {
+      // For scheme-of-study, show topics directly
+      return (
+        <div className="topics-list">
+          {loading ? (
+            <div className="loading">Loading...</div>
+          ) : Object.keys(topics).length > 0 ? (
+            Object.keys(topics).map((topicName, i) => (
+              <div
+                key={i}
+                className="topic-item"
+                onClick={() => handleTopicClick(topicName)}
+              >
+                📌 {topicName}
+              </div>
+            ))
+          ) : (
+            <div className="no-topics">No topics available</div>
+          )}
+        </div>
+      );
+    } else {
+      // For other subjects, show content types
+      return (
+        <>
+          {contentTypes.map(({ label, value }) => (
+            <div key={value}>
+              <div
+                className={`content-type ${
+                  activeContentType === value ? "active" : ""
+                }`}
+                onClick={() => handleContentTypeClick(subjectName, value)}
+              >
+                {label}
+              </div>
+
+              {activeContentType === value && (
+                <div className="topics-list">
+                  {loading ? (
+                    <div className="loading">Loading...</div>
+                  ) : Object.keys(topics).length > 0 ? (
+                    Object.keys(topics).map((topicName, i) => (
+                      <div
+                        key={i}
+                        className="topic-item"
+                        onClick={() => handleTopicClick(topicName)}
+                      >
+                        📌 {topicName}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="no-topics">No topics available</div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      );
+    }
+  };
 
   return (
     <div className="notes-container">
@@ -186,40 +285,7 @@ const Notes = () => {
                 }`}
               >
                 <div className="dropdown-content">
-                  {contentTypes.map(({ label, value }) => (
-                    <div key={value}>
-                      <div
-                        className={`content-type ${
-                          activeContentType === value ? "active" : ""
-                        }`}
-                        onClick={() =>
-                          handleContentTypeClick(subjectName, value)
-                        }
-                      >
-                        {label}
-                      </div>
-
-                      {activeContentType === value && (
-                        <div className="topics-list">
-                          {loading ? (
-                            <div className="loading">Loading...</div>
-                          ) : Object.keys(topics).length > 0 ? (
-                            Object.keys(topics).map((topicName, i) => (
-                              <div
-                                key={i}
-                                className="topic-item"
-                                onClick={() => handleTopicClick(topicName)}
-                              >
-                                📌 {topicName}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="no-topics">No topics available</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {renderSubjectContent(subjectName, index)}
                 </div>
               </div>
             </div>
