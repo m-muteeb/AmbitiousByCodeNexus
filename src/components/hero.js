@@ -118,7 +118,7 @@ const Hero = () => {
     <section className="hero mt-5 mb-3">
       <div className="hero-content">
         <h1>
-          The <span style={{ color: "orange" }}>Smart</span>{" "}
+         <span style={{ color: "orange" }}>Ambitious</span> The <span>Smart</span>{" "}
           <span style={{ color: "orange" }}>Choice</span> for Future
         </h1>
         <p>
