@@ -46,6 +46,7 @@ export default function Header() {
           <Link to="/about">About</Link>
           <Link to="/contact">Contact Us</Link>
           <Link to="/institutionpage">Paid Test Series</Link>
+           <Link to="/fourm" onClick={handleLinkClick}>Discussion Forum</Link>
         </nav>
 
         {/* Right Section */}
@@ -73,6 +74,8 @@ export default function Header() {
           <Link to="/" onClick={handleLinkClick}>Home</Link>
           <Link to="/about" onClick={handleLinkClick}>About Us</Link>
           <Link to="/institutionpage" onClick={handleLinkClick}>Paid Test Series</Link>
+            <Link to="/fourm" onClick={handleLinkClick}>Discussion Forum</Link>
+          
           <Link to="/contact" onClick={handleLinkClick}>Contact Us</Link>
           {/* {!user && <Link to="/login" onClick={handleLinkClick}>Login</Link>} */}
           {!user ? (

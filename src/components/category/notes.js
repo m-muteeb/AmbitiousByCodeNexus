@@ -80,7 +80,8 @@ const Notes = () => {
         where("class", "==", selectedClass),
         where("subject", "==", subject.trim().toLowerCase()),
         where("contentType", "==", contentType.trim().toLowerCase()),
-        where("isPaid", "==", false)
+        where("isPaid", "==", false),
+        where("contentType", "==", contentType.trim().toLowerCase())
       );
 
       console.log("Fetching topics with query:", q);

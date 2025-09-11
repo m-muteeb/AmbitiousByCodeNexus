@@ -7,6 +7,8 @@ import FrontEnd from './pages/Frontend';
 import Auth from './pages/Auth/index';
 import InstitutionAdminPage from './components/institutionadmin';
 import PrivateRoute from './components/PrivateRoute';
+import Discussionfourm from './components/Discudssion ';
+import LoginRegister from './components/LoginRegisterPage';
 
 export default function Router() {
   return (
@@ -36,6 +38,8 @@ export default function Router() {
       {/* Auth and Frontend */}
       <Route path="/auth/*" element={<Auth />} />
       <Route path="/*" element={<FrontEnd />} />
+      <Route path="/fourm" element={<Discussionfourm />} />
+      <Route path="/discussionlogin" element={<LoginRegister/>} />
     </Routes>
   );
 }

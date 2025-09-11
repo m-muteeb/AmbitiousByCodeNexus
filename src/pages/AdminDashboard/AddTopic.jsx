@@ -14,22 +14,11 @@ import {
   LoadingOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../../config/supabase";
-import {
-  fetchClasses,
-  fetchSubjects,
-  fetchContentTypes,
-  fetchEcatContentTypes,
-  fetchPrimaryContentTypes,
-  handleAddClass,
-  handleAddSubject,
-  handleAddContentType,
-  handleAddEcatContentType,
-  handleAddPrimaryContentType,
-} from "../../utils/addfunctions";
-import { collection, addDoc } from "firebase/firestore";
 import { fireStore } from "../../config/firebase";
+import { supabase } from "../../config/supabase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { useNavigate, Link } from "react-router-dom";
 import "../../assets/css/addtopic.css";
 
 const { Option } = Select;
@@ -43,7 +32,7 @@ const AddContent = () => {
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [addingClass, setAddingClass] = useState(false);
   const [newClass, setNewClass] = useState("");
-  const [isPaid, setIsPaid] = useState(false);
+  const [isPaid, setIsPaid] = useState(false); // Toggle for paid content
   const [form] = Form.useForm();
   const [contentTypes, setContentTypes] = useState([]);
   const [newContentType, setNewContentType] = useState("");
@@ -54,20 +43,170 @@ const AddContent = () => {
   const [ecatContentTypes, setEcatContentTypes] = useState([]);
   const [newEcatContentType, setNewEcatContentType] = useState("");
   const [addingEcatContentType, setAddingEcatContentType] = useState(false);
-  const [primaryContentTypes, setPrimaryContentTypes] = useState([]);
-  const [newPrimaryContentType, setNewPrimaryContentType] = useState("");
-  const [addingPrimaryContentType, setAddingPrimaryContentType] = useState(false);
 
   useEffect(() => {
-    fetchClasses(form, setClasses, setDescription);
+    const fetchClasses = async () => {
+      const querySnapshot = await getDocs(collection(fireStore, "classes"));
+      const fetchedClasses = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.data().name,
+      }));
+      setClasses(fetchedClasses);
+
+      const draft = JSON.parse(localStorage.getItem("draft"));
+      if (draft) {
+        setDescription(draft.description || "");
+        form.setFieldsValue(draft);
+      }
+    };
+
+    fetchClasses();
   }, [form]);
 
   useEffect(() => {
-    fetchContentTypes(setContentTypes);
-    fetchSubjects(setSubjects);
-    fetchEcatContentTypes(setEcatContentTypes);
-    fetchPrimaryContentTypes(setPrimaryContentTypes);
+    const fetchContentTypes = async () => {
+      try {
+        const querySnapshot = await getDocs(
+          collection(fireStore, "contentTypes")
+        );
+        const types = querySnapshot.docs.map((doc) => ({
+          label: doc.data().label,
+          value: doc.data().value,
+        }));
+        setContentTypes(types);
+      } catch (error) {
+        console.error("Failed to fetch content types:", error);
+        message.error("Error loading content types.");
+      }
+    };
+
+    fetchContentTypes();
   }, []);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(fireStore, "subjects"));
+        const fetchedSubjects = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name,
+        }));
+        setSubjects(fetchedSubjects);
+      } catch (error) {
+        console.error("Failed to fetch subjects:", error);
+        message.error("Error loading subjects.");
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
+  useEffect(() => {
+    const fetchEcatContentTypes = async () => {
+      try {
+        const querySnapshot = await getDocs(
+          collection(fireStore, "ecatContentTypes")
+        );
+        const types = querySnapshot.docs.map((doc) => ({
+          label: doc.data().label,
+          value: doc.data().value,
+        }));
+        setEcatContentTypes(types);
+      } catch (error) {
+        console.error("Failed to fetch ECAT content types:", error);
+        message.error("Error loading ECAT content types.");
+      }
+    };
+
+    fetchEcatContentTypes();
+  }, []);
+
+  const handleAddEcatContentType = async () => {
+  if (
+    newEcatContentType &&
+    !ecatContentTypes.some(
+      (type) =>
+        type.label.toLowerCase() === newEcatContentType.toLowerCase() ||
+        type.value.toLowerCase() === newEcatContentType.toLowerCase()
+    )
+  ) {
+    setAddingEcatContentType(true);
+    try {
+      const newType = {
+        label: newEcatContentType,
+        value: newEcatContentType.toLowerCase().replace(/\s+/g, "-"),
+      };
+
+      await addDoc(collection(fireStore, "ecatContentTypes"), newType);
+      setEcatContentTypes([...ecatContentTypes, newType]);
+      setNewEcatContentType("");
+
+      // 👇 Set the newly added type as selected in the form
+      form.setFieldsValue({ ecatContentType: newType.value });
+
+      message.success(`ECAT content type "${newType.label}" added!`);
+    } catch (e) {
+      console.error("Error adding ECAT content type:", e);
+      message.error("Failed to add ECAT content type.");
+    } finally {
+      setAddingEcatContentType(false);
+    }
+  }
+};
+
+
+  const handleAddContentType = async () => {
+    if (
+      newContentType &&
+      !contentTypes.some(
+        (type) =>
+          type.label.toLowerCase() === newContentType.toLowerCase() ||
+          type.value.toLowerCase() === newContentType.toLowerCase()
+      )
+    ) {
+      setAddingContentType(true);
+      try {
+        const newType = {
+          label: newContentType,
+          value: newContentType.toLowerCase().replace(/\s+/g, "-"),
+        };
+
+        await addDoc(collection(fireStore, "contentTypes"), newType);
+        setContentTypes([...contentTypes, newType]);
+        setNewContentType("");
+        message.success(`Content type "${newType.label}" added!`);
+      } catch (e) {
+        console.error("Error adding content type:", e);
+        message.error("Failed to add content type.");
+      } finally {
+        setAddingContentType(false);
+      }
+    }
+  };
+
+  const handleAddSubject = async () => {
+    if (
+      newSubject &&
+      !subjects.some(
+        (sub) => sub.name.toLowerCase() === newSubject.toLowerCase()
+      )
+    ) {
+      setAddingSubject(true);
+      try {
+        const docRef = await addDoc(collection(fireStore, "subjects"), {
+          name: newSubject,
+        });
+        setSubjects([...subjects, { id: docRef.id, name: newSubject }]);
+        setNewSubject("");
+        message.success(`Subject "${newSubject}" added successfully!`, 3);
+      } catch (e) {
+        console.error("Error adding subject:", e);
+        message.error("Failed to add subject.", 3);
+      } finally {
+        setAddingSubject(false);
+      }
+    }
+  };
 
   const onFinish = async (values) => {
     const {
@@ -86,13 +225,17 @@ const AddContent = () => {
         const uploadPromises = file.map(async (fileItem) => {
           const uniqueFileName = `${Date.now()}-${fileItem.name}`;
           const { data, error } = await supabase.storage
-            .from("topics")
+            .from("topics") // your Supabase bucket name
             .upload(uniqueFileName, fileItem.originFileObj, {
               cacheControl: "3600",
               upsert: false,
             });
 
-          if (error) throw error;
+          if (error) {
+            console.error("Upload failed:", error.message);
+            message.error("File upload failed.", 3);
+            throw error;
+          }
 
           const {
             data: { publicUrl },
@@ -106,20 +249,21 @@ const AddContent = () => {
       const topicData = {
         topic: topic || "",
         class: selectedClasses.join(", "),
-        subject: (subject || "").trim().toLowerCase(),
+        subject: (subject || "").trim().toLowerCase(), // keep only this one
         contentType: contentType || "",
         ecatcontentType: values.ecatContentType || "",
-        primaryContentType: values.primaryContentType || "",
         description: description || "",
         fileUrls,
         isPaid: isPaid,
         timestamp: new Date(),
       };
+      console.log("Topic Data:", topicData);
 
       await addDoc(collection(fireStore, "topics"), topicData);
 
       if (isPaid) {
-        await addDoc(collection(fireStore, "premiumtests"), topicData);
+        // Changed collection name here only
+        await addDoc(collection(fireStore, "institutionpdfs"), topicData);
       }
  
       message.success("Topic created successfully!", 3);
@@ -135,11 +279,33 @@ const AddContent = () => {
     }
   };
 
+  const handleAddClass = async () => {
+    if (newClass && !classes.some((cls) => cls.name === newClass)) {
+      setAddingClass(true);
+      try {
+        const docRef = await addDoc(collection(fireStore, "classes"), {
+          name: newClass,
+        });
+        setClasses([...classes, { id: docRef.id, name: newClass }]);
+        setNewClass("");
+        message.success(`Class "${newClass}" added successfully!`, 3);
+      } catch (e) {
+        console.error("Error adding class:", e);
+        message.error("Failed to add class.", 3);
+      } finally {
+        setAddingClass(false);
+      }
+    }
+  };
+
   return (
     <div className="form-container mt-2">
       <h1 className="text-center mb-2 py-5">Create New Topic</h1>
 
-      <Card bordered={false} style={{ margin: "20px auto", width: "100%", borderRadius: "10px" }}>
+      <Card
+        bordered={false}
+        style={{ margin: "20px auto", width: "100%", borderRadius: "10px" }}
+      >
         <Form
           layout="vertical"
           onFinish={onFinish}
@@ -193,7 +359,10 @@ const AddContent = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="ECAT Content Type" name="ecatContentType">
+          <Form.Item
+            label="ECAT Content Type"
+            name="ecatContentType"
+          >
             <Select
               placeholder="Select ECAT content type"
               dropdownRender={(menu) => (
@@ -234,50 +403,10 @@ const AddContent = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Primary Content Type" name="primaryContentType">
-            <Select
-              placeholder="Select primary content type"
-              dropdownRender={(menu) => (
-                <>
-                  {menu}
-                  <div
-                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
-                  >
-                    <Input
-                      style={{ flex: "auto" }}
-                      placeholder="Add new primary content type"
-                      value={newPrimaryContentType}
-                      onChange={(e) => setNewPrimaryContentType(e.target.value)}
-                      onPressEnter={handleAddPrimaryContentType}
-                    />
-                    <Button
-                      type="primary"
-                      icon={
-                        addingPrimaryContentType ? (
-                          <LoadingOutlined />
-                        ) : (
-                          <PlusOutlined />
-                        )
-                      }
-                      onClick={handleAddPrimaryContentType}
-                    >
-                      {addingPrimaryContentType ? "Adding..." : "Add"}
-                    </Button>
-                  </div>
-                </>
-              )}
-            >
-              {primaryContentTypes.map((type) => (
-                <Option key={type.value} value={type.value}>
-                  {type.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
           <Form.Item
             label="Subject"
             name="subject"
+            rules={[{ required: true, message: "Please select a subject!" }]}
           >
             <Select
               placeholder="Select a subject"
@@ -318,6 +447,9 @@ const AddContent = () => {
           <Form.Item
             label="Content Type"
             name="contentType"
+            rules={[
+              { required: true, message: "Please select a content type!" },
+            ]}
           >
             <Select
               placeholder={
@@ -440,6 +572,7 @@ const AddContent = () => {
             </Button>
           </Form.Item>
 
+          {/* Added Links to Dashboard */}
           <div className="additional-links">
             <Link to="/dashboard/allowusers" style={{ marginRight: 20 }}>
               Manage Users
@@ -453,25 +586,3 @@ const AddContent = () => {
 };
 
 export default AddContent;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

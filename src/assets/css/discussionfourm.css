@@ -1,7 +1,7 @@
 /* discussion-forum.css */
 .discussion-forum-container {
   min-height: 100vh;
-  background-color: #f5f7f9;
+ 
   padding: 20px 0;
 }
 
@@ -445,4 +445,37 @@
   .user-details {
     margin-left: 0;
   }
+}
+.auth-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.auth-options {
+  display: flex;
+  gap: 10px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logout-btn {
+  margin-left: 10px;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #888;
+  margin-right: 10px;
+  text-transform: capitalize;
+}
+
+.reply-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
 }

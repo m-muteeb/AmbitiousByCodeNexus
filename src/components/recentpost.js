@@ -9,9 +9,9 @@ const RecentPosts = () => {
   const [recentPosts, setRecentPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-      window.scrollTo(0, 0);
-    }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const fetchRecentPosts = async () => {
@@ -36,6 +36,7 @@ const RecentPosts = () => {
             fileUrls,
             timestamp,
             topicId: doc.id,
+            subject: data.subject || '',
           };
         });
 
@@ -49,6 +50,14 @@ const RecentPosts = () => {
 
     fetchRecentPosts();
   }, []);
+
+  // Function to check if the file URL is valid and supported
+  const isSupportedFileType = (fileUrl) => {
+    if (!fileUrl || typeof fileUrl !== 'string') return false;
+    const supportedExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const extension = fileUrl.toLowerCase().split('.').pop();
+    return supportedExtensions.includes(`.${extension}`);
+  };
 
   if (loading) {
     return (
@@ -71,12 +80,13 @@ const RecentPosts = () => {
           recentPosts.map((post) => {
             const firstFileRaw = post.fileUrls.length > 0 ? post.fileUrls[0] : null;
             const firstFileUrl = typeof firstFileRaw === 'string' ? firstFileRaw : firstFileRaw?.url;
+            const isValidFile = isSupportedFileType(firstFileUrl);
 
             return (
               <Col key={post.topicId} xs={12} sm={6} md={4}>
-                {firstFileUrl ? (
+                {firstFileUrl && isValidFile ? (
                   <Link
-                   to={`/preview?url=${firstFileUrl}&title=${encodeURIComponent(post.topic)}`}
+                    to={`/preview?url=${encodeURIComponent(firstFileUrl)}&title=${encodeURIComponent(post.topic)}`}
                     className="recent-post-link"
                   >
                     <Card className="recent-post-card h-100">
@@ -85,6 +95,11 @@ const RecentPosts = () => {
                         <p className="recent-post-date">
                           {post.timestamp ? post.timestamp.toLocaleDateString() : 'No date available'}
                         </p>
+                        {post.subject && (
+                          <p className="recent-post-subject text-muted">
+                            Subject: {post.subject}
+                          </p>
+                        )}
                       </Card.Body>
                     </Card>
                   </Link>
@@ -95,7 +110,14 @@ const RecentPosts = () => {
                       <p className="recent-post-date">
                         {post.timestamp ? post.timestamp.toLocaleDateString() : 'No date available'}
                       </p>
-                      <p className="text-muted">No file available</p>
+                      {post.subject && (
+                        <p className="recent-post-subject text-muted">
+                          Subject: {post.subject}
+                        </p>
+                      )}
+                      <p className="text-muted">
+                        {firstFileUrl ? 'Unsupported file format' : 'No file available'}
+                      </p>
                     </Card.Body>
                   </Card>
                 )}
@@ -113,15 +135,3 @@ const RecentPosts = () => {
 };
 
 export default memo(RecentPosts);
-
-
-
-
-
-
-
-
-
-
-
-
