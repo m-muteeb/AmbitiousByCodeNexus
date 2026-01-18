@@ -1,133 +1,272 @@
-import React, { useEffect, useState } from 'react';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import React, { useState, useEffect } from "react";
+import {
+  Table,
+  Button,
+  message,
+  Popconfirm,
+  Tooltip,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Card,
+  Tag,
+  Row,
+  Col,
+  Space,
+  Typography
+} from "antd";
+import {
+  UserDeleteOutlined,
+  EditOutlined,
+  UserSwitchOutlined,
+  CrownOutlined,
+  SafetyCertificateOutlined,
+  CheckCircleOutlined,
+  InfoCircleOutlined,
+  TeamOutlined
+} from "@ant-design/icons";
+import { supabase } from "../../config/supabase";
 
-const RoleNotChangedUsers = ({ goBack }) => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState(null);
+const { Option } = Select;
+const { Title } = Typography;
 
-  const fetchUsers = async () => {
+const RoleManager = () => {
+  // We'll fetch ALL profiles once and split them in the UI
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // State for Editing
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [form] = Form.useForm();
+
+  // Fetch all profiles
+  const fetchProfiles = async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, 'users'));
-      const filtered = querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(user => user.role === 'user'); // only users with role 'user'
-      setUsers(filtered);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-    }
-    setLoading(false);
-  };
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const updateRole = async (id, newRole) => {
-    if (!newRole) return;
-    setUpdatingId(id);
-    try {
-      await updateDoc(doc(db, 'users', id), { role: newRole });
-      // remove updated user from list immediately (since role changed)
-      setUsers(prev => prev.filter(user => user.id !== id));
-    } catch (err) {
-      console.error('Error updating role:', err);
+      if (error) throw error;
+      setProfiles(data || []);
+    } catch (error) {
+      console.error("Fetch Roles Error:", error);
+      message.error("Failed to fetch users");
+    } finally {
+      setLoading(false);
     }
-    setUpdatingId(null);
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchProfiles();
   }, []);
 
+  // Update User Role/Profile
+  const handleUpdate = async (values) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: values.full_name,
+          institution_name: values.institution_name,
+          role: values.role
+        })
+        .eq('id', editingUser.id);
+
+      if (error) throw error;
+
+      message.success("User Profile Updated Successfully");
+      setIsModalVisible(false);
+      fetchProfiles();
+    } catch (error) {
+      console.error("Update Error:", error);
+      message.error("Failed to update user");
+    }
+  };
+
+  // Delete User (Only from profiles table for now as per previous logic)
+  const handleDelete = async (id) => {
+    try {
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) throw error;
+      message.success("User removed from database");
+      fetchProfiles();
+    } catch (error) {
+      console.error("Delete Error:", error);
+      message.error("Failed to delete user");
+    }
+  };
+
+  // Categorize Users
+  const pendingUsers = profiles.filter(p => p.role === 'user');
+  const institutionalAdmins = profiles.filter(p => p.role === 'admin' || p.role === 'premium');
+  const superAdmins = profiles.filter(p => p.role === 'superadmin');
+
+  // Common Action Columns
+  const actionColumn = {
+    title: "Actions",
+    key: "action",
+    render: (_, record) => (
+      <Space>
+        <Tooltip title="Promote / Edit">
+          <Button
+            type="primary"
+            ghost
+            shape="circle"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingUser(record);
+              form.setFieldsValue({ ...record });
+              setIsModalVisible(true);
+            }}
+          />
+        </Tooltip>
+        {!record.role.includes('superadmin') && (
+          <Popconfirm
+            title="Are you sure delete this user?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button danger shape="circle" icon={<UserDeleteOutlined />} />
+          </Popconfirm>
+        )}
+      </Space>
+    ),
+  };
+
+  // Columns Definitions
+  const baseColumns = [
+    {
+      title: "Institution / Name",
+      dataIndex: "institution_name",
+      key: "name",
+      render: (text, record) => (
+        <div>
+          <div style={{ fontWeight: 700 }}>{text || record.full_name}</div>
+          <div style={{ fontSize: 12, color: '#8c8c8c' }}>{record.email}</div>
+        </div>
+      )
+    },
+    {
+      title: "Current Role",
+      dataIndex: "role",
+      key: "role",
+      render: (role) => {
+        let color = 'default';
+        let icon = null;
+        if (role === 'admin') { color = 'processing'; icon = <InfoCircleOutlined />; }
+        if (role === 'premium') { color = 'gold'; icon = <CrownOutlined />; }
+        if (role === 'superadmin') { color = 'purple'; icon = <SafetyCertificateOutlined />; }
+        return <Tag color={color} icon={icon}>{role.toUpperCase()}</Tag>;
+      }
+    },
+    {
+      title: "Joined",
+      dataIndex: "created_at",
+      key: "created_at",
+      render: (date) => new Date(date).toLocaleDateString()
+    },
+  ];
+
   return (
-    <div style={{ padding: '20px' }}>
-      <button
-        onClick={goBack}
-        style={{
-          backgroundColor: '#1976d2',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '6px',
-          padding: '10px 18px',
-          cursor: 'pointer',
-          marginBottom: '20px',
-          fontWeight: '600',
-        }}
+    <div style={{ padding: 24, background: '#f0f2f5', minHeight: '100vh' }}>
+      <Title level={2} style={{ marginBottom: 32 }}>Role Management Console</Title>
+
+      <Row gutter={[24, 24]}>
+
+        {/* CARD 1: Pending Requests (Role: 'user') */}
+        <Col xs={24} xl={8}>
+          <Card
+            title={<Space><UserSwitchOutlined style={{ color: '#1890ff' }} /> Pending Requests</Space>}
+            style={{ borderRadius: 16, border: 'none', height: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+            bodyStyle={{ padding: '12px' }}
+          >
+            <Table
+              dataSource={pendingUsers}
+              columns={[...baseColumns.slice(0, 1), actionColumn]}
+              rowKey="id"
+              pagination={{ pageSize: 5 }}
+              size="small"
+              loading={loading}
+            />
+          </Card>
+        </Col>
+
+        {/* CARD 2: Institutional Admins (Role: 'admin' or 'premium') */}
+        <Col xs={24} xl={8}>
+          <Card
+            title={<Space><CheckCircleOutlined style={{ color: '#52c41a' }} /> Institutional Admins</Space>}
+            style={{ borderRadius: 16, border: 'none', height: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+            bodyStyle={{ padding: '12px' }}
+          >
+            <Table
+              dataSource={institutionalAdmins}
+              columns={[...baseColumns.slice(0, 2), actionColumn]}
+              rowKey="id"
+              pagination={{ pageSize: 5 }}
+              size="small"
+              loading={loading}
+            />
+          </Card>
+        </Col>
+
+        {/* CARD 3: Superadmins (Role: 'superadmin') */}
+        <Col xs={24} xl={8}>
+          <Card
+            title={<Space><SafetyCertificateOutlined style={{ color: '#722ed1' }} /> Superadmin Roles</Space>}
+            style={{ borderRadius: 16, border: 'none', height: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+            bodyStyle={{ padding: '12px' }}
+          >
+            <Table
+              dataSource={superAdmins}
+              columns={baseColumns}
+              rowKey="id"
+              pagination={false}
+              size="small"
+              loading={loading}
+            />
+          </Card>
+        </Col>
+
+      </Row>
+
+      {/* Edit Modal */}
+      <Modal
+        title="Manage User Role"
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={null}
+        destroyOnClose
       >
-        ⬅ Back
-      </button>
-
-      <h3 style={{ marginBottom: '15px' }}>Role Not Changed Users</h3>
-
-      {loading ? (
-        <p>Loading users...</p>
-      ) : users.length === 0 ? (
-        <p>No users with role "user" found.</p>
-      ) : (
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            boxShadow: '0 3px 10px rgba(0,0,0,0.1)',
-            fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
-          }}
-        >
-          <thead>
-            <tr
-              style={{
-                backgroundColor: '#1976d2',
-                color: '#fff',
-                textAlign: 'center',
-              }}
-            >
-              <th style={thTdStyle}>#</th>
-              <th style={thTdStyle}>Institution</th>
-              <th style={thTdStyle}>Email</th>
-              <th style={thTdStyle}>Phone</th>
-              <th style={thTdStyle}>Address</th>
-              <th style={thTdStyle}>Current Role</th>
-              <th style={thTdStyle}>Change Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user, idx) => (
-              <tr key={user.id} style={{ textAlign: 'center', borderBottom: '1px solid #ddd' }}>
-                <td style={thTdStyle}>{idx + 1}</td>
-                <td style={thTdStyle}>{user.institutionName || 'N/A'}</td>
-                <td style={thTdStyle}>{user.email}</td>
-                <td style={thTdStyle}>{user.phoneNumber || 'N/A'}</td>
-                <td style={thTdStyle}>{user.address || 'N/A'}</td>
-                <td style={thTdStyle}>{user.role}</td>
-                <td style={thTdStyle}>
-                  <select
-                    disabled={updatingId === user.id}
-                    defaultValue=""
-                    onChange={(e) => updateRole(user.id, e.target.value)}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '5px',
-                      border: '1px solid #ccc',
-                      cursor: updatingId === user.id ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    <option value="" disabled>
-                      {updatingId === user.id ? 'Updating...' : 'Select Role'}
-                    </option>
-                    <option value="admin">Admin (Allow Demo)</option>
-                    <option value="premium">Premium (Allow Premium)</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        <Form form={form} layout="vertical" onFinish={handleUpdate}>
+          <Form.Item name="institution_name" label="Institution Name" rules={[{ required: true }]}>
+            <Input prefix={<TeamOutlined />} />
+          </Form.Item>
+          <Form.Item name="full_name" label="Contact Person">
+            <Input />
+          </Form.Item>
+          <Form.Item name="role" label="Assign Role" rules={[{ required: true }]}>
+            <Select>
+              <Option value="user">User (Standard)</Option>
+              <Option value="admin">
+                <Space><InfoCircleOutlined /> Demo Admin</Space>
+              </Option>
+              <Option value="premium">
+                <Space><CrownOutlined style={{ color: '#faad14' }} /> Premium Member</Space>
+              </Option>
+            </Select>
+          </Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Update Profile
+          </Button>
+        </Form>
+      </Modal>
     </div>
   );
 };
 
-const thTdStyle = {
-  padding: '12px',
-  fontSize: '14px',
-};
-
-export default RoleNotChangedUsers;
+export default RoleManager;

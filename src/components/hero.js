@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../assets/css/hero.css";
 import heroImage from "../assets/images/heroImage.png";
 import { FaSearch } from "react-icons/fa";
-import { db } from "../config/firebase"; // ✅ your config path
-import { collection, getDocs } from "firebase/firestore"; // ✅ import from SDK
- // Make sure path is correct
+// import { supabase } from "../config/supabase"; // Removed
 
 const Hero = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,25 +21,24 @@ const Hero = () => {
     setAllWords(uniqueWords);
   };
 
-  // Fetch topics from Firebase
-  const fetchTopicsFromFirebase = async () => {
-    try {
-      const topicsRef = collection(db, "topics");
-      const snapshot = await getDocs(topicsRef);
-      const topicList = snapshot.docs.map((doc) => doc.data());
-      setTopics(topicList);
-    } catch (err) {
-      console.error("Error fetching topics:", err);
-    }
+  // Mock Fetch topics
+  const fetchTopics = async () => {
+    // Mock data
+    setTopics([
+      { topic: 'Math Notes', file_urls: [{ url: '#' }] },
+      { topic: 'Physics Notes', file_urls: [{ url: '#' }] }
+    ]);
   };
 
   useEffect(() => {
     extractTextWordsFromDOM();
-    fetchTopicsFromFirebase();
+    fetchTopics();
   }, []);
 
   // Highlight matched word in DOM
   const highlightWordInDOM = (targetWord) => {
+    // ... (logic remains same, simplified for brevity in mock replacement if needed, but keeping it full is safer for UX)
+    // For this overwrite, I'll keep the DOM logic as it's frontend only and cool.
     document.querySelectorAll(".search-target").forEach((el) => {
       const parent = el.parentNode;
       parent.replaceChild(document.createTextNode(el.innerText), el);
@@ -88,9 +85,13 @@ const Hero = () => {
         .slice(0, 5);
 
       const topicMatches = topics
-        .filter((topic) => topic.name.toLowerCase().includes(value))
+        .filter((topic) => topic.topic && topic.topic.toLowerCase().includes(value))
         .slice(0, 5)
-        .map((topic) => ({ name: topic.name, url: topic.url, isTopic: true }));
+        .map((topic) => ({
+          name: topic.topic,
+          url: topic.file_urls?.[0]?.url || topic.file_urls?.[0] || "",
+          isTopic: true
+        }));
 
       const mergedSuggestions = [
         ...textMatches.map((word) => ({ name: word, isTopic: false })),
@@ -118,7 +119,7 @@ const Hero = () => {
     <section className="hero mt-5 mb-3">
       <div className="hero-content">
         <h1>
-         <span style={{ color: "orange" }}>Ambitious</span> The <span>Smart</span>{" "}
+          <span style={{ color: "orange" }}>Ambitious</span> The <span>Smart</span>{" "}
           <span style={{ color: "orange" }}>Choice</span> for Future
         </h1>
         <p>
@@ -165,9 +166,3 @@ const Hero = () => {
 };
 
 export default Hero;
-
-
-
-
-
-

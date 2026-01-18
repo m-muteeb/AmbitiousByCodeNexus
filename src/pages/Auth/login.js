@@ -1,150 +1,90 @@
-// src/components/LoginPage.js
-import React, { useState, useEffect } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../../config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { useNavigate, Link } from 'react-router-dom'; // Add useNavigate here
+import React, { useState } from 'react';
+import { Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import './Auth.css';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { signIn } = useAuth();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      // 1. Login
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-
-      // 2. Fetch user role from Firestore
-      const userRef = doc(db, 'users', uid);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const role = userData.role;
-
-        // 3. Redirect based on role
-        if (role === 'premium' || role === 'admin') {
-          navigate('/institutionpage');
-        } else if (role === 'superadmin') {
-          navigate('/dashboard/addcontent');
-        } else {
-          setError('Access denied. Your role does not have permission if you are the new use then wait for 24 hours and if you think this is the mistake then contact us.');
+        try {
+            const { data: profileData, error } = await signIn(email, password);
+            if (error) {
+                if (error.message.includes('Invalid login credentials')) {
+                    setError('Invalid email or password.');
+                } else {
+                    setError(error.message || 'Failed to login');
+                }
+            } else {
+                if (profileData && (profileData.role === 'admin' || profileData.role === 'superadmin')) {
+                    navigate('/dashboard');
+                } else {
+                    navigate('/');
+                }
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('An error occurred. Please try again.');
+        } finally {
+            setLoading(false);
         }
-      } else {
-        setError('User data not found in Firestore.');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  return (
-    <div style={styles.container}>
-      <div style={styles.formWrapper}>
-        <h2 style={styles.title}>Login</h2>
-        {error && <p style={styles.error}>{error}</p>}
-        <form onSubmit={handleLogin} style={styles.form}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={styles.input}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={styles.input}
-          />
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        <div style={styles.links}>
-          <Link to="/auth/forgot-password" style={styles.link}>Forgot password?</Link>
-          <p style={{ marginTop: '1rem' }}>
-            Don't have an account? <Link to="/auth/register" style={styles.link}>Sign up</Link>
-          </p>
+    return (
+        <div className="auth-wide-container">
+            <div className="auth-simple-card" style={{ maxWidth: '450px' }}>
+                <div className="auth-header">
+                    <h2>Welcome Back</h2>
+                    <p>Login to continue your academic journey</p>
+                </div>
+
+                {error && <Alert variant="danger" style={{ borderRadius: '8px' }}>{error}</Alert>}
+
+                <Form onSubmit={handleSubmit} className="auth-form-modern">
+                    <Form.Group className="mb-3">
+                        <Form.Label>Email Address</Form.Label>
+                        <Form.Control
+                            type="email"
+                            placeholder="name@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </Form.Group>
+
+                    <Form.Group className="mb-4">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control
+                            type="password"
+                            placeholder="Enter password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </Form.Group>
+
+                    <Button type="submit" className="auth-primary-btn" disabled={loading}>
+                        {loading ? <Spinner animation="border" size="sm" /> : 'Login'}
+                    </Button>
+                </Form>
+
+                <div className="auth-footer">
+                    <span>Don't have an account? </span>
+                    <Link to="/auth/register" className="auth-link">Create Account</Link>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
-};
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    background: 'linear-gradient(to right, #e0eafc, #cfdef3)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: '48px',
-  },
-  formWrapper: {
-    background: '#fff',
-    padding: '3rem',
-    borderRadius: '10px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: '400px',
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: '1.5rem',
-    color: '#333',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  input: {
-    padding: '0.75rem 1rem',
-    marginBottom: '1rem',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-    fontSize: '1rem',
-  },
-  button: {
-    padding: '0.75rem 1rem',
-    backgroundColor: '#003f88',
-    color: '#fff',
-    fontSize: '1rem',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  links: {
-    marginTop: '1rem',
-    textAlign: 'center',
-  },
-  link: {
-    color: '#003f88',
-    textDecoration: 'none',
-    fontWeight: '500',
-  },
-  error: {
-    color: 'red',
-    marginBottom: '1rem',
-    textAlign: 'center',
-  },
+    );
 };
 
 export default LoginPage;

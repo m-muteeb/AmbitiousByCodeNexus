@@ -1,440 +1,198 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Table,
-  Button,
-  Popconfirm,
-  message,
-  Modal,
-  Form,
-  Input,
-  Select,
-  Upload,
-  Tag,
-} from "antd";
-import {
-  EditOutlined,
-  DeleteOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
-import {
-  collection,
-  getDocs,
-  deleteDoc,
-  doc,
-  updateDoc,
-  query,
-  orderBy,
-  serverTimestamp,
-} from "firebase/firestore";
-import { fireStore, storage } from "../../config/firebase";
-import {
-  deleteObject,
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from "firebase/storage";
-import { getStorage } from "firebase/storage";
+import { Table, Button, Popconfirm, message, Space, Select, Input, Tag, Modal, List, Card } from "antd";
+import { DeleteOutlined, EyeOutlined, SearchOutlined, ReloadOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { supabaseApi } from "../../config/supabase";
 
-const ManageContent = () => {
-  const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [previousSubCategory, setPreviousSubCategory] = useState(""); // Fix #1
-  const [form] = Form.useForm();
+const { Option } = Select;
+
+const ManageTopics = () => {
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [classes, setClasses] = useState([]);
-  const [newFiles, setNewFiles] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [filterClass, setFilterClass] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [viewFilesModal, setViewFilesModal] = useState({ visible: false, files: [], title: '' });
 
-  useEffect(() => {
-    fetchProducts();
-    fetchClasses();
-  }, []);
-
-  const fetchClasses = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(fireStore, "classes"));
-      const classList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setClasses(classList);
-    } catch (error) {
-      message.error("Failed to fetch classes.");
-      console.error(error);
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      const q = query(
-        collection(fireStore, "topics"),
-        orderBy("timestamp", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      const productList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setProducts(productList);
-    } catch (error) {
-      message.error("Failed to fetch products.");
-      console.error(error);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    setDeleting(true);
-    try {
-      await deleteDoc(doc(fireStore, "topics", id));
-      message.success("Product deleted successfully!");
-      setProducts((prev) => prev.filter((product) => product.id !== id));
-    } catch (error) {
-      message.error("Failed to delete product.");
-      console.error(error);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleEdit = (record) => {
-    setEditingProduct(record);
-    setPreviousSubCategory(record.subcategory || ""); // Ensures previous subcategory is stored
-
-    form.setFieldsValue({
-      topic: record.topic,
-      class: record.class,
-      subject: record.subject,
-      contentType: record.contentType,
-      subcategory: record.subcategory,
-      description: record.description,
-      isPaid: record.isPaid,
-    });
-
-    setIsModalVisible(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalVisible(false);
-    form.resetFields();
-    setLoading(false);
-  };
-
-
-const extractStoragePath = (url) => {
-  try {
-    const decodedUrl = decodeURIComponent(url);
-    const pathMatch = decodedUrl.match(/\/o\/(.*?)\?/);
-    return pathMatch ? pathMatch[1] : null;
-  } catch {
-    return null;
-  }
-};
-
-  const handleRemoveFile = async (index, productId) => {
-    const fileData = editingProduct.fileUrls[index];
-    const fileURL = typeof fileData === "string" ? fileData : fileData.url;
-
-    if (!fileURL || typeof fileURL !== "string") {
-      console.error("Invalid file URL:", fileURL);
-      return;
-    }
-
-    const storagePath = extractStoragePath(fileURL);
-    if (!storagePath) {
-      console.error("Failed to extract storage path from URL:", fileURL);
-      return;
-    }
-
-    const fileRef = ref(storage, storagePath);
-
-    try {
-      // Step 1: Delete file from Firebase Storage
-      await deleteObject(fileRef);
-      console.log("File deleted successfully from Storage");
-
-    // Step 2: Update Firestore to remove the file URL
-    const updatedFiles = editingProduct.fileUrls.filter((_, i) => i !== index);
-    const productRef = doc(fireStore, "topics", productId);
-
-      await updateDoc(productRef, { fileUrls: updatedFiles });
-      console.log("File URL removed from Firestore");
-
-    // Step 3: Update local state
-    setEditingProduct((prev) => ({ ...prev, fileUrls: updatedFiles }));
-  } catch (error) {
-    console.error("Error deleting file:", error);
-  }
-};
-
-
-  const handleUpdate = async (values) => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const updatedValues = { ...values, timestamp: serverTimestamp() };
-      const productRef = doc(fireStore, "topics", editingProduct.id);
-
-      // Upload new files if any
-      if (newFiles.length > 0) {
-        const uploadedfileUrls = await Promise.all(
-          newFiles.map(async (file) => {
-            const fileRef = ref(
-              storage,
-              `topics/${editingProduct.id}/${file.name}`
-            );
-            await uploadBytes(fileRef, file);
-            return await getDownloadURL(fileRef);
-          })
-        );
-
-        // Merge old and new file URLs
-        updatedValues.fileUrls = [
-          ...(editingProduct.fileUrls || []),
-          ...uploadedfileUrls,
-        ];
-      }
-
-      // Update Firestore
-      await updateDoc(productRef, updatedValues);
-      message.success("Product updated successfully!");
-
-      // Reset modal state
-      setNewFiles([]); // Clear uploaded files list
-      handleModalClose();
-      fetchProducts(); // Refresh product list
+      // Fetch everything, ordered by newest first
+      const topics = await supabaseApi.fetch('topics', 'select=*&order=created_at.desc');
+      setData(topics || []);
     } catch (error) {
-      message.error("Failed to update product.");
-      console.error(error);
+      console.error("Fetch error:", error);
+      message.error("Failed to sync current topics");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleDelete = async (id) => {
+    try {
+      await supabaseApi.delete('topics', id);
+      message.success("Content removed from library");
+      setData(prev => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error("Delete error:", error);
+      message.error("Failed to delete content");
+      fetchData(); // Sync state on failure
+    }
+  };
+
   const columns = [
-    { title: "Topic", dataIndex: "topic", key: "topic" },
-    { title: "Class", dataIndex: "class", key: "class" },
-    { title: "Subject", dataIndex: "subject", key: "subject" },
-    { title: "Content Type", dataIndex: "contentType", key: "contentType" },
-    { title: "Description", dataIndex: "description", key: "description" },
     {
-      title: "Status",
-      dataIndex: "isPaid",
-      key: "isPaid",
-      render: (isPaid) => (
-        <Tag
-          color={isPaid ? "green" : "red"}
-          style={{ fontWeight: "600", fontSize: "14px", padding: "4px 8px" }}
-        >
-          {isPaid ? "Paid" : "Unpaid"}
+      title: "Topic Title",
+      dataIndex: "title",
+      key: "title",
+      render: (text) => <b style={{ color: '#1890ff' }}>{text}</b>,
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      render: (text) => (
+        <Tag color="geekblue">{text ? text.replace('_', ' ').toUpperCase() : 'N/A'}</Tag>
+      ),
+    },
+    {
+      title: "Level",
+      dataIndex: "class_level",
+      key: "class_level",
+      render: (text) => <Tag color="cyan">{text || 'N/A'}</Tag>,
+    },
+    {
+      title: "Subject",
+      dataIndex: "subject",
+      key: "subject",
+    },
+    {
+      title: "Visibility",
+      dataIndex: "is_premium",
+      key: "is_premium",
+      render: (isPremium) => (
+        <Tag color={isPremium ? "gold" : "green"}>
+          {isPremium ? "PREMIUM" : "FREE"}
         </Tag>
       ),
     },
     {
-      title: "File",
-      dataIndex: "fileUrls",
-      key: "fileUrls",
-      render: (fileUrls) =>
-        fileUrls && fileUrls.length > 0
-          ? fileUrls.map((file, index) => {
-            const fileUrl = typeof file === "string" ? file : file.url;
-            return (
-              <div key={index}>
-                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                  View File {index + 1}
-                </a>
-              </div>
-            );
-          })
-          : "No file",
-    },
-    ,
-    {
       title: "Action",
-      key: "action",
+      key: "actions",
+      width: 250,
       render: (_, record) => (
-        <>
+        <Space size="small">
           <Button
-            icon={<EditOutlined />}
-            style={{ margin: 3, color: "green" }}
-            onClick={() => handleEdit(record)}
-            loading={loading}
-          />
-          <Popconfirm
-            title="Are you sure to delete this product?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => setViewFilesModal({
+              visible: true,
+              files: Array.isArray(record.file_urls) ? record.file_urls : [],
+              title: record.title
+            })}
           >
-            <Button
-              style={{ color: "red", margin: 3 }}
-              icon={<DeleteOutlined />}
-              danger
-              loading={deleting}
-            />
+            Files ({Array.isArray(record.file_urls) ? record.file_urls.length : 0})
+          </Button>
+          <Popconfirm
+            title="Delete permanently?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Delete"
+            cancelText="Keep"
+          >
+            <Button danger size="small" icon={<DeleteOutlined />}>
+              Remove
+            </Button>
           </Popconfirm>
-        </>
+        </Space>
       ),
     },
   ];
 
+  const filteredData = data.filter(item => {
+    const matchSearch = String(item.title || '').toLowerCase().includes(searchText.toLowerCase());
+    const matchClass = filterClass === 'all' || item.class_level === filterClass;
+    const matchCategory = filterCategory === 'all' || item.category === filterCategory;
+    return matchSearch && matchClass && matchCategory;
+  });
+
   return (
-    <>
-      
-      <div
-        className="container"
-        style={{
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <div className="row">
-          <div className="col-12">
-            <h2 className="page-title py-5 mt-3 text-center">Manage Content</h2>
-
-               <div className="table-responsive">
-          <Table dataSource={products} columns={columns} rowKey="id" bordered />
+    <div style={{ padding: "24px" }}>
+      <Card style={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h2 style={{ margin: 0, fontWeight: 900, color: '#1d3557' }}>Content Library</h2>
+          <Button
+            type="primary"
+            icon={<ReloadOutlined />}
+            onClick={fetchData}
+            loading={loading}
+          >
+            Refresh Library
+          </Button>
         </div>
 
-          </div>
-        </div>
-        
+        <Space style={{ marginBottom: 24 }} wrap size="middle">
+          <Input
+            placeholder="Search resource..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+            style={{ width: 280 }}
+          />
+          <Select defaultValue="all" style={{ width: 140 }} onChange={setFilterClass}>
+            <Option value="all">All Grades</Option>
+            <Option value="9th">9th</Option>
+            <Option value="10th">10th</Option>
+            <Option value="11th">11th</Option>
+            <Option value="12th">12th</Option>
+            <Option value="ECAT">ECAT</Option>
+            <Option value="Primary">Primary</Option>
+          </Select>
+        </Space>
+
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 800 }}
+          bordered
+        />
+      </Card>
 
       <Modal
-        title="Edit Product"
-        visible={isModalVisible}
-        onCancel={handleModalClose}
-        footer={null}
-        width={1000}
-        className="responsive-modal"
+        title={`Topic Resources: ${viewFilesModal.title}`}
+        open={viewFilesModal.visible}
+        onCancel={() => setViewFilesModal({ ...viewFilesModal, visible: false })}
+        footer={[
+          <Button key="ok" type="primary" onClick={() => setViewFilesModal({ ...viewFilesModal, visible: false })}>
+            Done
+          </Button>
+        ]}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleUpdate}
-          className="responsive-form"
-        >
-          <Form.Item label="Topic" name="topic">
-            <Input placeholder="Enter topic" />
-          </Form.Item>
-
-          <Form.Item label="Class" name="class">
-            <Select placeholder="Select class">
-              {classes.map((classOption) => (
-                <Select.Option key={classOption.id} value={classOption.name}>
-                  {classOption.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Subject" name="subject">
-            <Input placeholder="Enter subject" />
-          </Form.Item>
-
-          <Form.Item label="Content Type" name="contentType">
-            <Input placeholder="Enter content type" />
-          </Form.Item>
-
-          <Form.Item label="Description" name="description">
-            <Input.TextArea placeholder="Enter description" rows={4} />
-          </Form.Item>
-
-          <Form.Item label="Paid Status" name="isPaid">
-            <Select placeholder="Select status">
-              <Select.Option value={true}>Paid</Select.Option>
-              <Select.Option value={false}>Unpaid</Select.Option>
-            </Select>
-          </Form.Item>
-
-            <Form.Item label="Uploaded Files">
-            {editingProduct?.fileUrls?.length > 0 ? (
-  editingProduct.fileUrls.map((file, index) => {
-    const fileUrl = typeof file === "string" ? file : file.url;
-    const fileName = typeof file === "string" ? `View File ${index + 1}` : file.fileName;
-
-    return (
-      <div
-        key={index}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          marginBottom: "8px",
-        }}
-      >
-        <a
-          href={fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ marginRight: "8px" }}
-        >
-          {fileName}
-        </a>
-        <Button
-          type="text"
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleRemoveFile(index, editingProduct?.id)}
-        />
-      </div>
-    );
-  })
-) : (
-  <p>No previous files</p>
-)}
-
-
-            <Upload
-              multiple
-              beforeUpload={(file) => {
-                setNewFiles((prev) => [...prev, file]);
-                return false;
-              }}
-              fileList={newFiles}
-              onRemove={(file) => {
-                setNewFiles((prev) => prev.filter((f) => f !== file));
-              }}
+        <List
+          itemLayout="horizontal"
+          dataSource={viewFilesModal.files}
+          renderItem={file => (
+            <List.Item
+              actions={[
+                <Button type="link" onClick={() => window.open(file.url, '_blank')}>View PDF</Button>
+              ]}
             >
-              <Button icon={<UploadOutlined />}>Upload Files</Button>
-            </Upload>
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>
-              Update
-            </Button>
-          </Form.Item>
-        </Form>
+              <List.Item.Meta
+                avatar={<FilePdfOutlined style={{ fontSize: 24, color: '#f5222d' }} />}
+                title={file.name}
+                description={`${(file.size / 1024).toFixed(1)} KB`}
+              />
+            </List.Item>
+          )}
+        />
       </Modal>
     </div>
-
- {/* add topic page button */}
-       <div style={{ marginTop: '2px', textAlign: 'center', marginBottom: '20px' }}>
-            <button
-              className="add-institution-btn"
-              onClick={() => navigate('/dashboard/addcontent')}
-              style={{
-                background: 'linear-gradient(135deg, #4caf50, #81c784)',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 25px',
-                color: '#fff',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
-                transition: '0.3s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-            >
-              ➕ Add Topic Page
-            </button>
-          </div>
-  </>
-);
-
-  
+  );
 };
 
-export default ManageContent;
+export default ManageTopics;

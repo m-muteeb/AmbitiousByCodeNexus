@@ -1,14 +1,12 @@
-import React, { useEffect } from "react"; // <-- import useEffect
-import Hero from '../../components/hero'
-import CardSection from '../../components/cardsection'
-import Premium from '../../components/premium'
-import Testimonials from '../../components/testimonial'
-import FormAuth from '../../components/formauth'
-import Project from '../../components/ourTrack'
-import Recentpost from '../../components/recentpost'
+import React, { useEffect } from "react";
+import Hero from "../../components/Home/Hero";
+import Testimonial from "../../components/Home/Testimonial";
+import RecentPost from "../../components/Home/RecentPost";
+import OurTrack from "../../components/Home/OurTrack";
+import CardSection from "../../components/Home/CardSection";
+import Premium from "../../components/Home/Premium";
 
-export default function HomePage() {
-
+const HomePage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -17,11 +15,12 @@ export default function HomePage() {
     <>
       <Hero />
       <CardSection />
-      <Project />
+      <OurTrack />
       <Premium />
-      <Recentpost />
-      <Testimonials />
-      {/* <FormAuth /> */}
+      <RecentPost />
+      <Testimonial />
     </>
-  )
-}
+  );
+};
+
+export default HomePage;

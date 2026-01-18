@@ -1,68 +1,87 @@
-// src/components/PrivateRoute.js
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '../config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { Spin } from 'antd';
+import { useAuth } from '../context/AuthContext';
+import { Spin, Button, Result, Space } from 'antd';
 
 const PrivateRoute = ({ children, requiredRoles = [] }) => {
-  const [user, loading] = useAuthState(auth);
-  const [checkingRole, setCheckingRole] = useState(true);
-  const [userRole, setUserRole] = useState(null);
-  const [unauthorized, setUnauthorized] = useState(false);
+    const { user, profile, loading, signOut } = useAuth();
 
-  useEffect(() => {
-    const checkUserRole = async () => {
-      if (user) {
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
+    // Show loading spinner while checking authentication
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                background: '#f8f9fa'
+            }}>
+                <Spin size="large" tip="Verifying secure access..." />
+                <p style={{ marginTop: 20, color: '#666' }}>This should only take a moment.</p>
 
-        if (userSnap.exists()) {
-          const role = userSnap.data().role;
-          setUserRole(role);
-
-          // Check if user's role is in the list of required roles
-          if (requiredRoles.length > 0 && !requiredRoles.includes(role)) {
-            setUnauthorized(true);
-          }
-        } else {
-          setUnauthorized(true);
-        }
-      }
-      setCheckingRole(false);
-    };
-
-    if (user) {
-      checkUserRole();
-    } else {
-      setCheckingRole(false);
+                {/* Safeguard for the user if something goes wrong with session initialization */}
+                <Button
+                    type="link"
+                    onClick={() => signOut()}
+                    style={{ marginTop: 40, color: '#999' }}
+                >
+                    Taking too long? Click here to reset session
+                </Button>
+            </div>
+        );
     }
-  }, [user, requiredRoles]);
 
-  if (loading || checkingRole) {
-    return (
-      <div style={{ textAlign: 'center', marginTop: '20vh' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
+    // Redirect to login if no user is authenticated
+    if (!user) {
+        return <Navigate to="/auth/login" replace />;
+    }
 
-  if (!user) return <Navigate to="/auth/login" replace />;
+    // Check if user profile was loaded
+    if (!profile) {
+        return (
+            <div style={{ padding: '40px' }}>
+                <Result
+                    status="403"
+                    title="Profile Sync Error"
+                    subTitle="We found your account but couldn't sync your profile data. Please try logging out and back in."
+                    extra={
+                        <Button type="primary" onClick={() => signOut()}>
+                            Sign Out & Retry
+                        </Button>
+                    }
+                />
+            </div>
+        );
+    }
 
-  if (unauthorized) {
-    return (
-      <div style={{ textAlign: 'center', padding: '100px 20px' }}>
-        <h1>🚫 Access Denied</h1>
-        <p style={{ fontSize: '18px', marginTop: '10px' }}>
-          You do not have access to this page If you are a new user then wait for 24 Hours .<br />
-          Please <strong>contact the admin</strong> if you believe this is a mistake.
-        </p>
-      </div>
-    );
-  }
+    // Superadmin has access to everything
+    if (profile.role === 'superadmin') {
+        return children;
+    }
 
-  return children;
+    // Check if user's role matches required roles
+    if (requiredRoles.length > 0 && !requiredRoles.includes(profile.role)) {
+        return (
+            <div style={{ padding: '40px' }}>
+                <Result
+                    status="warning"
+                    title="Access Restricted"
+                    subTitle={`This area requires ${requiredRoles.join(' or ')} permissions. Your current rank is ${profile.role.toUpperCase()}.`}
+                    extra={
+                        <Space direction="vertical">
+                            <p>If you recently registered, please wait for an administrator to approve your request.</p>
+                            <Button type="primary" onClick={() => window.location.href = '/'}>
+                                Back to Home
+                            </Button>
+                        </Space>
+                    }
+                />
+            </div>
+        );
+    }
+
+    return children;
 };
 
 export default PrivateRoute;

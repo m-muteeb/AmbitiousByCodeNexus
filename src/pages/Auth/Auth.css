@@ -1,0 +1,144 @@
+/* Simple & Perfect Wide Auth */
+.auth-wide-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f3f5;
+    padding: 100px 20px 40px;
+}
+
+.auth-simple-card {
+    width: 100%;
+    max-width: 850px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    padding: 50px;
+    border: 1px solid #e9ecef;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.auth-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1d3557;
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.auth-form-modern .form-group {
+    margin-bottom: 24px;
+}
+
+.auth-form-modern .form-label {
+    font-weight: 700;
+    color: #343a40;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.auth-form-modern .form-control {
+    border: 1.5px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.auth-form-modern .form-control:focus {
+    border-color: #1d3557;
+    box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.08);
+}
+
+.logo-upload-box {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: border-color 0.2s;
+    cursor: pointer;
+}
+
+.logo-upload-box:hover {
+    border-color: #1d3557;
+}
+
+.logo-preview-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.logo-preview-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.auth-primary-btn {
+    width: 100%;
+    height: 54px;
+    background: #1d3557;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin-top: 10px;
+    transition: opacity 0.2s;
+}
+
+.auth-primary-btn:hover {
+    opacity: 0.9;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #6c757d;
+}
+
+.auth-link {
+    color: #1d3557;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+/* Wide grid for signup specifically */
+.signup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+@media (max-width: 768px) {
+    .signup-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-simple-card {
+        padding: 30px 20px;
+    }
+}

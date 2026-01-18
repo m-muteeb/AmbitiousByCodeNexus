@@ -1,35 +1,37 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaRegBell, FaBars, FaTimes } from "react-icons/fa";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../../config/firebase"; // Make sure path is correct
+import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { FaBars, FaTimes } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
 import "../../assets/css/header.css";
 import logo from "../../assets/images/Ambitious logo .jpg";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-
-  // Track user auth state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
+  const location = useLocation();
+  const isAdmin = profile && (profile.role === 'admin' || profile.role === 'superadmin');
 
   // Handle logout
   const handleLogout = async () => {
-    await signOut(auth);
-    setIsOpen(false); // Close menu on logout
-    navigate("/");
+    try {
+      await signOut();
+      setIsOpen(false); // Close menu on logout
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   };
 
   // Close menu when a link is clicked
   const handleLinkClick = () => {
     setIsOpen(false);
   };
+
+  // Hide header on Admin Dashboard
+  if (location.pathname.startsWith('/dashboard')) {
+    return null;
+  }
 
   return (
     <header className="header">
@@ -46,17 +48,22 @@ export default function Header() {
           <Link to="/about">About</Link>
           <Link to="/contact">Contact Us</Link>
           <Link to="/institutionpage">Paid Test Series</Link>
-           <Link to="/fourm" onClick={handleLinkClick}>Discussion Forum</Link>
+          <Link to="/result-portal" onClick={handleLinkClick}>Student Result</Link>
         </nav>
 
         {/* Right Section */}
-        <div className="right-section">
+        <div className="right-section" style={{ display: 'flex', gap: '10px' }}>
+          {isAdmin && (
+            <Link to="/dashboard">
+              <button className="sign-in-btn" style={{ background: '#1d3557' }}>Admin Panel</button>
+            </Link>
+          )}
           {!user ? (
-            <Link to="/auth/login">
+            <Link to="/auth/login" className="mobile-hidden">
               <button className="sign-in-btn">Login</button>
             </Link>
           ) : (
-            <button onClick={handleLogout} className="sign-in-btn">
+            <button onClick={handleLogout} className="sign-in-btn mobile-hidden">
               Logout
             </button>
           )}
@@ -74,10 +81,12 @@ export default function Header() {
           <Link to="/" onClick={handleLinkClick}>Home</Link>
           <Link to="/about" onClick={handleLinkClick}>About Us</Link>
           <Link to="/institutionpage" onClick={handleLinkClick}>Paid Test Series</Link>
-            <Link to="/fourm" onClick={handleLinkClick}>Discussion Forum</Link>
-          
+          <Link to="/fourm" onClick={handleLinkClick}>Discussion Forum</Link>
+          <Link to="/result-portal" onClick={handleLinkClick}>Student Result</Link>
+
           <Link to="/contact" onClick={handleLinkClick}>Contact Us</Link>
           {/* {!user && <Link to="/login" onClick={handleLinkClick}>Login</Link>} */}
+          {isAdmin && <Link to="/dashboard" onClick={handleLinkClick} style={{ fontWeight: 'bold' }}>Admin Dashboard</Link>}
           {!user ? (
             <Link to="/auth/login" onClick={handleLinkClick}>
               <button className="sign-in-btn">Sign Up</button>

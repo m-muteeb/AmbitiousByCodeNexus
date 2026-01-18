@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, fireStore } from "../config/firebase";
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { Spin, Button, message, Card, Row, Col, Alert, Tooltip } from "antd";
 import { FileSearchOutlined, CrownOutlined } from "@ant-design/icons";
 import DemoTests from "./DemoTests";
@@ -9,34 +7,11 @@ import PremiumTests from "./PremiumTests";
 import { addHeaderToPdf } from "../utils/pdfUtils";
 
 const PdfList = () => {
-  const [user, setUser] = useState(null);
-  const [institution, setInstitution] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, profile: institution, loading } = useAuth();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [downloading, setDownloading] = useState(false);
   const [activeSection, setActiveSection] = useState(null); // "demo" | "premium" | null
   const [accessDenied, setAccessDenied] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        const institutionDoc = await getDoc(doc(fireStore, "users", firebaseUser.uid));
-        if (institutionDoc.exists()) {
-          setInstitution(institutionDoc.data());
-        } else {
-          message.error("Institution details not found.");
-        }
-      } else {
-        setUser(null);
-        setInstitution(null);
-        message.warning("You must be logged in.");
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const handleDownloadSelected = async () => {
     if (!selectedFiles.length) return message.info("No PDFs selected.");

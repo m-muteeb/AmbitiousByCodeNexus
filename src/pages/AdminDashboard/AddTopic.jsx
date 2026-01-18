@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import {
   Form,
   Input,
@@ -8,577 +8,232 @@ import {
   message,
   Card,
   Switch,
+  Progress,
+  Space,
 } from "antd";
 import {
   UploadOutlined,
-  LoadingOutlined,
-  PlusOutlined,
+  FilePdfOutlined,
+  CheckCircleFilled,
 } from "@ant-design/icons";
-import { fireStore } from "../../config/firebase";
-import { supabase } from "../../config/supabase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, getDocs } from "firebase/firestore";
-import { useNavigate, Link } from "react-router-dom";
+import { supabase, supabaseApi } from "../../config/supabase";
 import "../../assets/css/addtopic.css";
 
 const { Option } = Select;
+const { TextArea } = Input;
 
 const AddContent = () => {
-  const navigate = useNavigate();
-  const editor = useRef(null);
-  const [description, setDescription] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [classes, setClasses] = useState([]);
-  const [selectedClasses, setSelectedClasses] = useState([]);
-  const [addingClass, setAddingClass] = useState(false);
-  const [newClass, setNewClass] = useState("");
-  const [isPaid, setIsPaid] = useState(false); // Toggle for paid content
+  const [fileList, setFileList] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isPremium, setIsPremium] = useState(false);
   const [form] = Form.useForm();
-  const [contentTypes, setContentTypes] = useState([]);
-  const [newContentType, setNewContentType] = useState("");
-  const [addingContentType, setAddingContentType] = useState(false);
-  const [subjects, setSubjects] = useState([]);
-  const [newSubject, setNewSubject] = useState("");
-  const [addingSubject, setAddingSubject] = useState(false);
-  const [ecatContentTypes, setEcatContentTypes] = useState([]);
-  const [newEcatContentType, setNewEcatContentType] = useState("");
-  const [addingEcatContentType, setAddingEcatContentType] = useState(false);
 
-  useEffect(() => {
-    const fetchClasses = async () => {
-      const querySnapshot = await getDocs(collection(fireStore, "classes"));
-      const fetchedClasses = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name,
-      }));
-      setClasses(fetchedClasses);
+  const classes = [
+    { value: '9th', label: 'Class 9' },
+    { value: '10th', label: 'Class 10' },
+    { value: '11th', label: 'Class 11' },
+    { value: '12th', label: 'Class 12' },
+    { value: 'ECAT', label: 'ECAT' },
+    { value: 'Primary', label: 'Primary Education' }
+  ];
 
-      const draft = JSON.parse(localStorage.getItem("draft"));
-      if (draft) {
-        setDescription(draft.description || "");
-        form.setFieldsValue(draft);
-      }
+  const categories = [
+    { value: 'notes', label: 'Notes' },
+    { value: 'past_papers', label: 'Past Papers' },
+    { value: 'mcqs', label: 'MCQs' },
+    { value: 'ecat', label: 'ECAT Content' },
+    { value: 'primary', label: 'Primary Education' }
+  ];
+
+  const subjects = [
+    { value: 'Mathematics', label: 'Mathematics' },
+    { value: 'Physics', label: 'Physics' },
+    { value: 'Chemistry', label: 'Chemistry' },
+    { value: 'Biology', label: 'Biology' },
+    { value: 'English', label: 'English' },
+    { value: 'Urdu', label: 'Urdu' },
+    { value: 'Computer Science', label: 'Computer Science' },
+    { value: 'Islamiat', label: 'Islamiat' },
+    { value: 'Pak Studies', label: 'Pak Studies' }
+  ];
+
+  const uploadFileToStorage = async (file, currentClass) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+    const filePath = `${currentClass || 'general'}/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('content-files')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from('content-files')
+      .getPublicUrl(filePath);
+
+    return {
+      name: file.name,
+      url: urlData.publicUrl,
+      type: file.type,
+      size: file.size,
+      path: filePath
     };
-
-    fetchClasses();
-  }, [form]);
-
-  useEffect(() => {
-    const fetchContentTypes = async () => {
-      try {
-        const querySnapshot = await getDocs(
-          collection(fireStore, "contentTypes")
-        );
-        const types = querySnapshot.docs.map((doc) => ({
-          label: doc.data().label,
-          value: doc.data().value,
-        }));
-        setContentTypes(types);
-      } catch (error) {
-        console.error("Failed to fetch content types:", error);
-        message.error("Error loading content types.");
-      }
-    };
-
-    fetchContentTypes();
-  }, []);
-
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(fireStore, "subjects"));
-        const fetchedSubjects = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          name: doc.data().name,
-        }));
-        setSubjects(fetchedSubjects);
-      } catch (error) {
-        console.error("Failed to fetch subjects:", error);
-        message.error("Error loading subjects.");
-      }
-    };
-
-    fetchSubjects();
-  }, []);
-
-  useEffect(() => {
-    const fetchEcatContentTypes = async () => {
-      try {
-        const querySnapshot = await getDocs(
-          collection(fireStore, "ecatContentTypes")
-        );
-        const types = querySnapshot.docs.map((doc) => ({
-          label: doc.data().label,
-          value: doc.data().value,
-        }));
-        setEcatContentTypes(types);
-      } catch (error) {
-        console.error("Failed to fetch ECAT content types:", error);
-        message.error("Error loading ECAT content types.");
-      }
-    };
-
-    fetchEcatContentTypes();
-  }, []);
-
-  const handleAddEcatContentType = async () => {
-  if (
-    newEcatContentType &&
-    !ecatContentTypes.some(
-      (type) =>
-        type.label.toLowerCase() === newEcatContentType.toLowerCase() ||
-        type.value.toLowerCase() === newEcatContentType.toLowerCase()
-    )
-  ) {
-    setAddingEcatContentType(true);
-    try {
-      const newType = {
-        label: newEcatContentType,
-        value: newEcatContentType.toLowerCase().replace(/\s+/g, "-"),
-      };
-
-      await addDoc(collection(fireStore, "ecatContentTypes"), newType);
-      setEcatContentTypes([...ecatContentTypes, newType]);
-      setNewEcatContentType("");
-
-      // 👇 Set the newly added type as selected in the form
-      form.setFieldsValue({ ecatContentType: newType.value });
-
-      message.success(`ECAT content type "${newType.label}" added!`);
-    } catch (e) {
-      console.error("Error adding ECAT content type:", e);
-      message.error("Failed to add ECAT content type.");
-    } finally {
-      setAddingEcatContentType(false);
-    }
-  }
-};
-
-
-  const handleAddContentType = async () => {
-    if (
-      newContentType &&
-      !contentTypes.some(
-        (type) =>
-          type.label.toLowerCase() === newContentType.toLowerCase() ||
-          type.value.toLowerCase() === newContentType.toLowerCase()
-      )
-    ) {
-      setAddingContentType(true);
-      try {
-        const newType = {
-          label: newContentType,
-          value: newContentType.toLowerCase().replace(/\s+/g, "-"),
-        };
-
-        await addDoc(collection(fireStore, "contentTypes"), newType);
-        setContentTypes([...contentTypes, newType]);
-        setNewContentType("");
-        message.success(`Content type "${newType.label}" added!`);
-      } catch (e) {
-        console.error("Error adding content type:", e);
-        message.error("Failed to add content type.");
-      } finally {
-        setAddingContentType(false);
-      }
-    }
-  };
-
-  const handleAddSubject = async () => {
-    if (
-      newSubject &&
-      !subjects.some(
-        (sub) => sub.name.toLowerCase() === newSubject.toLowerCase()
-      )
-    ) {
-      setAddingSubject(true);
-      try {
-        const docRef = await addDoc(collection(fireStore, "subjects"), {
-          name: newSubject,
-        });
-        setSubjects([...subjects, { id: docRef.id, name: newSubject }]);
-        setNewSubject("");
-        message.success(`Subject "${newSubject}" added successfully!`, 3);
-      } catch (e) {
-        console.error("Error adding subject:", e);
-        message.error("Failed to add subject.", 3);
-      } finally {
-        setAddingSubject(false);
-      }
-    }
   };
 
   const onFinish = async (values) => {
-    const {
-      topic,
-      class: selectedClasses,
-      subject,
-      contentType,
-      file,
-    } = values;
+    if (fileList.length === 0) {
+      message.warning("Please select at least one educational file (PDF)");
+      return;
+    }
 
     setUploading(true);
-    let fileUrls = [];
+    setUploadProgress(0);
+    const hide = message.loading("Initiating secure upload...", 0);
 
     try {
-      if (file && file.length > 0) {
-        const uploadPromises = file.map(async (fileItem) => {
-          const uniqueFileName = `${Date.now()}-${fileItem.name}`;
-          const { data, error } = await supabase.storage
-            .from("topics") // your Supabase bucket name
-            .upload(uniqueFileName, fileItem.originFileObj, {
-              cacheControl: "3600",
-              upsert: false,
-            });
+      const uploadedFiles = [];
+      const totalFiles = fileList.length;
 
-          if (error) {
-            console.error("Upload failed:", error.message);
-            message.error("File upload failed.", 3);
-            throw error;
-          }
+      for (let i = 0; i < totalFiles; i++) {
+        const file = fileList[i];
+        message.loading({ content: `Uploading file ${i + 1} of ${totalFiles}...`, key: 'up' });
 
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("topics").getPublicUrl(data.path);
+        const uploadedFile = await uploadFileToStorage(file.originFileObj, values.class_level);
+        uploadedFiles.push(uploadedFile);
 
-          fileUrls.push({ url: publicUrl, fileName: fileItem.name });
-        });
-        await Promise.all(uploadPromises);
+        setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
       }
 
-      const topicData = {
-        topic: topic || "",
-        class: selectedClasses.join(", "),
-        subject: (subject || "").trim().toLowerCase(), // keep only this one
-        contentType: contentType || "",
-        ecatcontentType: values.ecatContentType || "",
-        description: description || "",
-        fileUrls,
-        isPaid: isPaid,
-        timestamp: new Date(),
+      const insertData = {
+        title: values.topic,
+        description: values.description || '',
+        category: values.category,
+        class_level: values.class_level,
+        subject: values.subject,
+        file_urls: uploadedFiles,
+        is_premium: isPremium,
       };
-      console.log("Topic Data:", topicData);
 
-      await addDoc(collection(fireStore, "topics"), topicData);
+      await supabaseApi.insert('topics', insertData);
 
-      if (isPaid) {
-        // Changed collection name here only
-        await addDoc(collection(fireStore, "institutionpdfs"), topicData);
-      }
- 
-      message.success("Topic created successfully!", 3);
-      localStorage.removeItem("draft");
+      message.destroy(hide);
+      message.success({ content: "Academic content published successfully!", icon: <CheckCircleFilled style={{ color: '#52c41a' }} /> });
+
       form.resetFields();
-      setDescription("");
-      setIsPaid(false);
-    } catch (e) {
-      console.error("Error saving topic:", e);
-      message.error("Failed to save topic.", 3);
+      setFileList([]);
+      setIsPremium(false);
+      setUploadProgress(0);
+    } catch (error) {
+      message.destroy(hide);
+      console.error("Upload error:", error);
+      message.error("Publishing Failed: " + (error.message || "Network Error"));
     } finally {
       setUploading(false);
     }
   };
 
-  const handleAddClass = async () => {
-    if (newClass && !classes.some((cls) => cls.name === newClass)) {
-      setAddingClass(true);
-      try {
-        const docRef = await addDoc(collection(fireStore, "classes"), {
-          name: newClass,
-        });
-        setClasses([...classes, { id: docRef.id, name: newClass }]);
-        setNewClass("");
-        message.success(`Class "${newClass}" added successfully!`, 3);
-      } catch (e) {
-        console.error("Error adding class:", e);
-        message.error("Failed to add class.", 3);
-      } finally {
-        setAddingClass(false);
-      }
-    }
-  };
-
   return (
-    <div className="form-container mt-2">
-      <h1 className="text-center mb-2 py-5">Create New Topic</h1>
-
+    <div className="add-topic-container" style={{ padding: '24px' }}>
       <Card
-        bordered={false}
-        style={{ margin: "20px auto", width: "100%", borderRadius: "10px" }}
+        title={<span style={{ fontSize: '1.2rem', fontWeight: 800 }}>Publish Academic Content</span>}
+        className="add-topic-card"
+        style={{ borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', border: 'none' }}
       >
-        <Form
-          layout="vertical"
-          onFinish={onFinish}
-          autoComplete="off"
-          form={form}
-        >
-          <Form.Item label="Topic Name" name="topic">
-            <Input placeholder="Enter topic name" />
-          </Form.Item>
-
-          <Form.Item
-            label="Class"
-            name="class"
-            rules={[{ required: true, message: "Please select a class!" }]}
-          >
-            <Select
-              mode="multiple"
-              placeholder="Select class(es)"
-              onChange={(value) => setSelectedClasses(value)} // ← track class changes
-              dropdownRender={(menu) => (
-                <>
-                  {menu}
-                  <div
-                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
-                  >
-                    <Input
-                      style={{ flex: "auto" }}
-                      placeholder="Add new class"
-                      value={newClass}
-                      onChange={(e) => setNewClass(e.target.value)}
-                      onPressEnter={handleAddClass}
-                    />
-                    <Button
-                      type="primary"
-                      icon={
-                        addingClass ? <LoadingOutlined /> : <PlusOutlined />
-                      }
-                      onClick={handleAddClass}
-                    >
-                      {addingClass ? "Adding..." : "Add"}
-                    </Button>
-                  </div>
-                </>
-              )}
+        <Form form={form} layout="vertical" onFinish={onFinish}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <Form.Item
+              label="Classification"
+              name="category"
+              rules={[{ required: true, message: 'Select content type' }]}
             >
-              {classes.map((classOption) => (
-                <Option key={classOption.id} value={classOption.name}>
-                  {classOption.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+              <Select placeholder="Type (e.g. Notes)">
+                {categories.map(c => <Option key={c.value} value={c.value}>{c.label}</Option>)}
+              </Select>
+            </Form.Item>
 
-          <Form.Item
-            label="ECAT Content Type"
-            name="ecatContentType"
-          >
-            <Select
-              placeholder="Select ECAT content type"
-              dropdownRender={(menu) => (
-                <>
-                  {menu}
-                  <div
-                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
-                  >
-                    <Input
-                      style={{ flex: "auto" }}
-                      placeholder="Add new ECAT content type"
-                      value={newEcatContentType}
-                      onChange={(e) => setNewEcatContentType(e.target.value)}
-                      onPressEnter={handleAddEcatContentType}
-                    />
-                    <Button
-                      type="primary"
-                      icon={
-                        addingEcatContentType ? (
-                          <LoadingOutlined />
-                        ) : (
-                          <PlusOutlined />
-                        )
-                      }
-                      onClick={handleAddEcatContentType}
-                    >
-                      {addingEcatContentType ? "Adding..." : "Add"}
-                    </Button>
-                  </div>
-                </>
-              )}
+            <Form.Item
+              label="Target Level"
+              name="class_level"
+              rules={[{ required: true, message: 'Select class level' }]}
             >
-              {ecatContentTypes.map((type) => (
-                <Option key={type.value} value={type.value}>
-                  {type.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="Subject"
-            name="subject"
-            rules={[{ required: true, message: "Please select a subject!" }]}
-          >
-            <Select
-              placeholder="Select a subject"
-              dropdownRender={(menu) => (
-                <>
-                  {menu}
-                  <div
-                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
-                  >
-                    <Input
-                      style={{ flex: "auto" }}
-                      placeholder="Add new subject"
-                      value={newSubject}
-                      onChange={(e) => setNewSubject(e.target.value)}
-                      onPressEnter={handleAddSubject}
-                    />
-                    <Button
-                      type="primary"
-                      icon={
-                        addingSubject ? <LoadingOutlined /> : <PlusOutlined />
-                      }
-                      onClick={handleAddSubject}
-                    >
-                      {addingSubject ? "Adding..." : "Add"}
-                    </Button>
-                  </div>
-                </>
-              )}
-            >
-              {subjects.map((subject) => (
-                <Option key={subject.id} value={subject.name}>
-                  {subject.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="Content Type"
-            name="contentType"
-            rules={[
-              { required: true, message: "Please select a content type!" },
-            ]}
-          >
-            <Select
-              placeholder={
-                selectedClasses.includes("ECAT")
-                  ? "Select ECAT content type"
-                  : "Select content type"
-              }
-              dropdownRender={(menu) => (
-                <>
-                  {menu}
-                  <div
-                    style={{ display: "flex", flexWrap: "nowrap", padding: 8 }}
-                  >
-                    <Input
-                      style={{ flex: "auto" }}
-                      placeholder={
-                        selectedClasses.includes("ECAT")
-                          ? "Add new ECAT content type"
-                          : "Add new content type"
-                      }
-                      value={
-                        selectedClasses.includes("ECAT")
-                          ? newEcatContentType
-                          : newContentType
-                      }
-                      onChange={(e) =>
-                        selectedClasses.includes("ECAT")
-                          ? setNewEcatContentType(e.target.value)
-                          : setNewContentType(e.target.value)
-                      }
-                      onPressEnter={
-                        selectedClasses.includes("ECAT")
-                          ? handleAddEcatContentType
-                          : handleAddContentType
-                      }
-                    />
-                    <Button
-                      type="primary"
-                      icon={
-                        selectedClasses.includes("ECAT") ? (
-                          addingEcatContentType ? (
-                            <LoadingOutlined />
-                          ) : (
-                            <PlusOutlined />
-                          )
-                        ) : addingContentType ? (
-                          <LoadingOutlined />
-                        ) : (
-                          <PlusOutlined />
-                        )
-                      }
-                      onClick={
-                        selectedClasses.includes("ECAT")
-                          ? handleAddEcatContentType
-                          : handleAddContentType
-                      }
-                    >
-                      {selectedClasses.includes("ECAT")
-                        ? addingEcatContentType
-                          ? "Adding..."
-                          : "Add"
-                        : addingContentType
-                        ? "Adding..."
-                        : "Add"}
-                    </Button>
-                  </div>
-                </>
-              )}
-            >
-              {(selectedClasses.includes("ECAT")
-                ? ecatContentTypes
-                : contentTypes
-              ).map((type) => (
-                <Option key={type.value} value={type.value}>
-                  {type.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Description" name="description">
-            <Input.TextArea
-              placeholder="Enter description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Upload File"
-            name="file"
-            valuePropName="fileList"
-            getValueFromEvent={(e) => (Array.isArray(e) ? e : e && e.fileList)}
-          >
-            <Upload
-              name="file"
-              beforeUpload={() => false}
-              accept=".jpg,.jpeg,.png,.pdf"
-              multiple
-            >
-              <Button icon={<UploadOutlined />}>Click to Upload</Button>
-            </Upload>
-          </Form.Item>
-
-          <Form.Item label="Upload as Paid Content">
-            <Switch
-              checked={isPaid}
-              onChange={(checked) => setIsPaid(checked)}
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={uploading}
-              style={{ width: "100%" }}
-            >
-              {uploading ? "Uploading..." : "Create Topic"}
-            </Button>
-          </Form.Item>
-
-          {/* Added Links to Dashboard */}
-          <div className="additional-links">
-            <Link to="/dashboard/allowusers" style={{ marginRight: 20 }}>
-              Manage Users
-            </Link>
-            <Link to="/dashboard/manageContent">Manage Content</Link>
+              <Select placeholder="Class / Exam">
+                {classes.map(c => <Option key={c.value} value={c.value}>{c.label}</Option>)}
+              </Select>
+            </Form.Item>
           </div>
+
+          <Form.Item
+            label="Academic Subject"
+            name="subject"
+            rules={[{ required: true, message: 'Select subject' }]}
+          >
+            <Select placeholder="Subject Name">
+              {subjects.map(s => <Option key={s.value} value={s.value}>{s.label}</Option>)}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Topic/Chapter Title"
+            name="topic"
+            rules={[{ required: true, message: 'Enter a descriptive title' }]}
+          >
+            <Input placeholder="e.g. Physics Chapter 1: Measurements" />
+          </Form.Item>
+
+          <Form.Item label="Brief Description" name="description">
+            <TextArea rows={2} placeholder="Summary of what this content covers..." />
+          </Form.Item>
+
+          <Form.Item name="isPremium" label="Access Control" valuePropName="checked">
+            <Space>
+              <Switch onChange={setIsPremium} checked={isPremium} />
+              <span style={{ fontWeight: 600, color: isPremium ? '#faad14' : '#52c41a' }}>
+                {isPremium ? 'PREMIUM (PAID ACCESS)' : 'PUBLIC (FREE ACCESS)'}
+              </span>
+            </Space>
+          </Form.Item>
+
+          <Form.Item
+            label="Select Educational Files (PDF Only)"
+            required
+          >
+            <Upload.Dragger
+              beforeUpload={() => false}
+              multiple
+              fileList={fileList}
+              onChange={({ fileList }) => setFileList(fileList)}
+              accept=".pdf"
+              style={{ borderRadius: '12px' }}
+            >
+              <p className="ant-upload-drag-icon">
+                <FilePdfOutlined style={{ color: '#ff4d4f' }} />
+              </p>
+              <p className="ant-upload-text">Click or drag PDF files to this area to upload</p>
+              <p className="ant-upload-hint">Support for single or bulk upload. Maximum file size: 50MB</p>
+            </Upload.Dragger>
+          </Form.Item>
+
+          {uploading && (
+            <div style={{ marginBottom: '20px' }}>
+              <Progress percent={uploadProgress} status="active" strokeColor="#1890ff" />
+            </div>
+          )}
+
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={uploading}
+            block
+            size="large"
+            style={{ height: '50px', borderRadius: '8px', fontWeight: 700, fontSize: '1.1rem' }}
+          >
+            {uploading ? 'PROCESSING UPLOAD...' : 'PUBLISH TO PORTAL'}
+          </Button>
         </Form>
       </Card>
     </div>
