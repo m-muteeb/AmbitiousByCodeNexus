@@ -8,6 +8,7 @@ import Footer from "./components/Footer/footer";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   const [showModal, setShowModal] = useState(true);
@@ -20,6 +21,7 @@ function App() {
   return (
     <AuthProvider>
       <div className="App">
+        <ScrollToTop />
         <Header />
         <Router />
         <Footer />

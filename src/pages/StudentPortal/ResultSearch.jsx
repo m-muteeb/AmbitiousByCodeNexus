@@ -86,6 +86,57 @@ const ResultSearch = () => {
             const totalObtained = enrichedMarks.reduce((sum, m) => sum + (m.obtained_marks || 0), 0);
             const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : 0;
 
+            // 5. CALCULATE POSITION (Rank)
+            // Fetch ALL students in this class for this session to rank them
+            let position = "N/A";
+            try {
+                // A. Get all students in this class
+                const classStudents = await supabaseApi.fetch('result_students', `class_id=eq.${selectedClass}`);
+                const classStudentIds = classStudents.map(s => s.id);
+
+                if (classStudentIds.length > 0) {
+                    // B. Get all marks for these students in this session
+                    // Note: URL length limit might be hit if too many students. 
+                    // Ideally use RPC, but for now client-side is okay for small schools.
+                    // Optimization: Fetch marks filtering only by session_id, then filter by student_ids in JS if needed,
+                    // OR assuming session_id filter is strong enough.
+                    const allSessionMarks = await supabaseApi.fetch('result_marks', `session_id=eq.${selectedSession}`);
+
+                    // Filter for only this class's students
+                    const validMarks = allSessionMarks.filter(m => classStudentIds.includes(m.student_id));
+
+                    // C. Aggregate Totals
+                    const studentTotals = {};
+                    validMarks.forEach(m => {
+                        if (!studentTotals[m.student_id]) studentTotals[m.student_id] = 0;
+                        studentTotals[m.student_id] += (m.obtained_marks || 0);
+                    });
+
+                    // D. Sort and Rank
+                    const sortedTotals = Object.entries(studentTotals)
+                        .sort(([, scoreA], [, scoreB]) => scoreB - scoreA); // Descending
+
+                    const myRankIndex = sortedTotals.findIndex(([id]) => id === student.id);
+                    if (myRankIndex !== -1) {
+                        const rank = myRankIndex + 1;
+                        // Add ordinal suffix
+                        const j = rank % 10,
+                            k = rank % 100;
+                        if (j == 1 && k != 11) {
+                            position = rank + "st";
+                        } else if (j == 2 && k != 12) {
+                            position = rank + "nd";
+                        } else if (j == 3 && k != 13) {
+                            position = rank + "rd";
+                        } else {
+                            position = rank + "th";
+                        }
+                    }
+                }
+            } catch (rankErr) {
+                console.error("Rank calculation error:", rankErr);
+            }
+
             const sessionObj = sessions.find(s => s.id === selectedSession);
             const classObj = allClasses.find(c => c.id === selectedClass);
 
@@ -100,10 +151,14 @@ const ResultSearch = () => {
                     total_max: totalMax,
                     total_obtained: totalObtained,
                     percentage: parseFloat(percentage),
+                    position: position
                 },
             };
 
             setResultData(formattedData);
+
+            // Scroll to top when result is displayed
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (err) {
             console.error('Search failure:', err);
             setError('System error while fetching results. Please try again.');
@@ -119,8 +174,8 @@ const ResultSearch = () => {
     };
 
     return (
-        <div className="result-portal-container">
-            <div className="result-search-wrapper" style={{ maxWidth: 800, margin: '0 auto' }}>
+        <div className="result-portal-container" style={{ width: '100%', padding: '20px 40px' }}>
+            <div className="result-search-wrapper" style={{ width: '100%', margin: '0 auto' }}>
 
                 {/* Minimalist Search Container - No Card, Just Clean Layout */}
                 <div className="minimal-search-container">

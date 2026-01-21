@@ -11,20 +11,37 @@ const ResultCard = ({ data }) => {
     const [isDownloading, setIsDownloading] = useState(false);
     const { student, session, summary, marks } = data;
 
+    // Filter valid marks (Ignore subjects with 0 or missing max_marks)
+    // Filter valid marks (Ignore subjects with 0, missing, or non-numeric max_marks)
+    const validMarks = marks.filter(m => {
+        const maxRaw = m.result_subjects?.max_marks;
+        if (!maxRaw) return false;
+
+        // Ensure it contains only digits/numbers (allows decimals)
+        // If it's a string like "100", it works. If "-", it fails.
+        const max = Number(maxRaw);
+        return !isNaN(max) && max > 0;
+    });
+
+    // Recalculate totals for display based on filtered marks
+    const displayedTotalMax = validMarks.reduce((sum, m) => sum + (m.result_subjects.max_marks || 0), 0);
+    const displayedTotalObtained = validMarks.reduce((sum, m) => sum + (m.obtained_marks || 0), 0);
+    const displayedPercentage = displayedTotalMax > 0 ? ((displayedTotalObtained / displayedTotalMax) * 100).toFixed(2) : "0.00";
+
     const handleDownloadPDF = async () => {
         setIsDownloading(true);
         const hide = message.loading("Generating Official PDF...", 0);
         try {
             const element = officialReportRef.current;
             const canvas = await html2canvas(element, {
-                scale: 3, // slightly lower scale for better performance on full page
+                scale: 2, // High quality
                 useCORS: true,
                 backgroundColor: "#ffffff",
-                windowWidth: 500,
+                windowWidth: 794, // A4 width in px at 96dpi approx
                 logging: false,
             });
 
-            const imgData = canvas.toDataURL("image/jpeg", 0.95);
+            const imgData = canvas.toDataURL("image/jpeg", 0.98);
             const pdf = new jsPDF({
                 orientation: "p",
                 unit: "mm",
@@ -33,15 +50,10 @@ const ResultCard = ({ data }) => {
             });
 
             const pdfWidth = pdf.internal.pageSize.getWidth();
-            const imgProps = pdf.getImageProperties(imgData);
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const margin = 0;
 
-            // Tight margins (10mm sides, 10mm top)
-            const marginSide = 10;
-            const marginTop = 10;
-            const contentWidth = pdfWidth - (marginSide * 2);
-            const contentHeight = (imgProps.height * contentWidth) / imgProps.width;
-
-            pdf.addImage(imgData, "JPEG", marginSide, marginTop, contentWidth, contentHeight, undefined, 'FAST');
+            pdf.addImage(imgData, "JPEG", margin, margin, pdfWidth, pdfHeight, undefined, 'FAST');
             pdf.save(`${student.full_name}_Official_Result.pdf`);
 
             message.destroy(hide);
@@ -64,7 +76,7 @@ const ResultCard = ({ data }) => {
         return "F";
     };
 
-    const overallGrade = getGrade(summary.percentage);
+    const overallGrade = getGrade(displayedPercentage);
 
     return (
         <div className="dual-ui-wrapper">
@@ -119,7 +131,7 @@ const ResultCard = ({ data }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {marks.map((m) => {
+                        {validMarks.map((m) => {
                             const p = ((m.obtained_marks / m.result_subjects.max_marks) * 100).toFixed(1);
                             return (
                                 <tr key={m.id}>
@@ -135,95 +147,122 @@ const ResultCard = ({ data }) => {
                     <tfoot>
                         <tr className="web-summary-row">
                             <td className="subject-name">TOTAL</td>
-                            <td>{summary.total_max}</td>
-                            <td>{summary.total_obtained}</td>
-                            <td>{summary.percentage}%</td>
+                            <td>{displayedTotalMax}</td>
+                            <td>{displayedTotalObtained}</td>
+                            <td>{displayedPercentage}%</td>
                             <td style={{ fontWeight: 900 }}>{overallGrade}</td>
                         </tr>
                     </tfoot>
                 </table>
 
-                <div className="web-stats-footer">
-                    <div>POSITION: {summary.position || "N/A"}</div>
+                <div className="web-stats-footer" style={{ marginTop: '20px', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                    <div>POSITION: <span style={{ color: '#1d3557' }}>{summary.position || "N/A"}</span></div>
                 </div>
             </div>
 
-            {/* 2. COMPACT OFFICIAL REPORT FOR PDF */}
+            {/* 2. SIMPLE PROFESSIONAL RESULT CARD (Hidden for PDF Generation) */}
             <div className="hidden-for-pdf">
-                <div className="official-report-card compact" ref={officialReportRef}>
-                    <div className="compact-header">
-                        <img src={logo} alt="Logo" className="compact-logo" />
-                        <div className="compact-titles">
-                            <h1 className="compact-main-title">THE AMBITIOUS EDUCATIONAL SYSTEM</h1>
-                            <p className="compact-subtitle">Jia Musa Shahdara Lahore | 0333-4082706 | ambitious-pk.netlify.app</p>
-                            <div className="compact-session-box">{session.name.toUpperCase()}</div>
+                <div className="official-report-card simple-pro-a4" ref={officialReportRef}>
+
+                    {/* Header: Logo Left (Large), School Info Right */}
+                    <div className="simple-header">
+                        <img src={logo} alt="Logo" className="simple-logo-large" />
+                        <div className="simple-school-info">
+                            <h1>THE AMBITIOUS EDUCATIONAL SYSTEM</h1>
+                            <p>Jia Musa Shahdara Lahore</p>
+                            <p>Phone: 0333-4082706</p>
+                            <div className="simple-session-text">{session.name.toUpperCase()}</div>
                         </div>
                     </div>
 
-                    <div className="compact-student-grid">
-                        <div className="compact-field">
-                            <span className="label">Student Name:</span>
-                            <span className="value">{student.full_name.toUpperCase()}</span>
+                    <div className="simple-divider"></div>
+
+                    {/* Student Info Table (Simple Bordered) */}
+                    <table className="simple-student-table">
+                        <tbody>
+                            <tr>
+                                <td className="label-cell">Student Name</td>
+                                <td className="value-cell">{student.full_name.toUpperCase()}</td>
+                                <td className="label-cell">Roll No</td>
+                                <td className="value-cell">{student.roll_number}</td>
+                            </tr>
+                            <tr>
+                                <td className="label-cell">Father Name</td>
+                                <td className="value-cell">{student.father_name.toUpperCase()}</td>
+                                <td className="label-cell">Class</td>
+                                <td className="value-cell">{student.result_classes.name} ({student.result_classes.section})</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    {/* Marks Table (Simple Bordered, No Colors) */}
+                    <table className="simple-marks-table">
+                        <thead>
+                            <tr>
+                                <th style={{ textAlign: 'left', paddingLeft: '10px' }}>SUBJECT</th>
+                                <th>MAX</th>
+                                <th>OBTAINED</th>
+                                <th>%</th>
+                                <th>GRADE</th>
+                                <th>REMARKS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {validMarks.map((m) => {
+                                const p = ((m.obtained_marks / m.result_subjects.max_marks) * 100).toFixed(1);
+                                const grade = getGrade(parseFloat(p));
+                                const remarks = grade === 'F' ? 'Fail' : (grade === 'A+' ? 'Excellent' : 'Pass');
+                                return (
+                                    <tr key={m.id}>
+                                        <td style={{ textAlign: 'left', paddingLeft: '10px', fontWeight: 'bold' }}>{m.result_subjects.name.toUpperCase()}</td>
+                                        <td>{m.result_subjects.max_marks}</td>
+                                        <td>{m.obtained_marks}</td>
+                                        <td>{p}%</td>
+                                        <td style={{ fontWeight: 'bold' }}>{grade}</td>
+                                        <td style={{ fontStyle: 'italic' }}>{remarks}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+
+                    {/* Summary Table (Narrow, Centered, Simple Bordered) */}
+                    <table className="simple-summary-table">
+                        <tbody>
+                            <tr>
+                                <td className="sum-label">GRAND TOTAL</td>
+                                <td className="sum-value">{displayedTotalObtained} / {displayedTotalMax}</td>
+                            </tr>
+                            <tr>
+                                <td className="sum-label">PERCENTAGE</td>
+                                <td className="sum-value">{displayedPercentage}%</td>
+                            </tr>
+                            <tr>
+                                <td className="sum-label">POSITION</td>
+                                <td className="sum-value">{summary.position || "-"}</td>
+                            </tr>
+                            <tr>
+                                <td className="sum-label">OVERALL GRADE</td>
+                                <td className="sum-value">{overallGrade}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    {/* Signatures */}
+                    <div className="simple-signatures">
+                        <div className="sig-block">
+                            <div className="sig-line"></div>
+                            <span>Class Teacher</span>
                         </div>
-                        <div className="compact-field">
-                            <span className="label">Father Name:</span>
-                            <span className="value">{student.father_name.toUpperCase()}</span>
-                        </div>
-                        <div className="compact-field small">
-                            <span className="label">Roll No:</span>
-                            <span className="value">{student.roll_number}</span>
-                        </div>
-                        <div className="compact-field small">
-                            <span className="label">Class/Sec:</span>
-                            <span className="value">{student.result_classes.name} ({student.result_classes.section})</span>
+                        <div className="sig-block">
+                            <div className="sig-line"></div>
+                            <span>Principal</span>
                         </div>
                     </div>
 
-                    <div className="compact-table-wrapper">
-                        <table className="compact-table">
-                            <thead>
-                                <tr>
-                                    <th className="t-left">Subject</th>
-                                    <th>Max</th>
-                                    <th>Obt</th>
-                                    <th>%</th>
-                                    <th>Grd</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {marks.map((m) => {
-                                    const p = ((m.obtained_marks / m.result_subjects.max_marks) * 100).toFixed(1);
-                                    return (
-                                        <tr key={m.id}>
-                                            <td className="t-left">{m.result_subjects.name.toUpperCase()}</td>
-                                            <td>{m.result_subjects.max_marks}</td>
-                                            <td>{m.obtained_marks}</td>
-                                            <td>{p}%</td>
-                                            <td>{getGrade(parseFloat(p))}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                            <tfoot>
-                                <tr className="compact-total-row">
-                                    <td className="t-left">OVERALL RESULT</td>
-                                    <td>{summary.total_max}</td>
-                                    <td>{summary.total_obtained}</td>
-                                    <td>{summary.percentage}%</td>
-                                    <td>{overallGrade}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    <div className="simple-footer-meta">
+                        Generated by Ambitious Portal | {new Date().toLocaleDateString()}
                     </div>
-
-                    <div className="compact-footer-stats">
-                        <div className="stat-box">POSITION: <span>{summary.position || "-"}</span></div>
-                        <div className="sign-area">
-                            <span>Principal Signature: _________________</span>
-                        </div>
-                    </div>
-
-                    <div className="compact-print-date">Generated on: {new Date().toLocaleDateString()}</div>
                 </div>
             </div>
         </div>

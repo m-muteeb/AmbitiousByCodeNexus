@@ -5,6 +5,7 @@ import ManageContent from './ManageTopic'
 import AllowUsers from './AllowUsers'
 import ManageResultPortal from './ResultPortal/ManageClasses'
 import ResultReport from './ResultPortal/ResultReport'
+import UploadResults from './ResultPortal/UploadResults'
 import DashboardLayout from './Layout.jsx'
 import AdminHome from './AdminHome.jsx'
 
@@ -20,6 +21,7 @@ export default function Dashboard() {
         {/* Result Portal Admin Routes */}
         <Route path="result-portal/manage" element={<ManageResultPortal />} />
         <Route path="result-portal/report" element={<ResultReport />} />
+        <Route path="result-portal/upload" element={<UploadResults />} />
       </Routes>
     </DashboardLayout>
   )

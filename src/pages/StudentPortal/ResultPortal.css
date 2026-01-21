@@ -1,13 +1,12 @@
-/* ResultPortal.css - Minimalist & Perfect Table */
+/* ResultPortal.css - Simple Professional Layout */
 
 /* --- GLOBAL CONTAINER --- */
 .result-portal-container {
-    padding-top: 140px;
-    /* Space for Navbar */
+    padding-top: 48px;
+    /* UPDATED: 48px top margin as requested */
     padding-bottom: 50px;
     min-height: 100vh;
     background: #ffffff;
-    /* pure white */
     font-family: 'Inter', sans-serif;
     display: flex;
     flex-direction: column;
@@ -17,9 +16,7 @@
 /* --- MINIMAL SEARCH SECTION --- */
 .minimal-search-container {
     width: 100%;
-    max-width: 800px;
     margin: 0 auto;
-    /* No borders, no shadows, just clean space */
 }
 
 .minimal-select .ant-select-selector {
@@ -31,24 +28,27 @@
     font-size: 1.1rem !important;
 }
 
-/* --- WEB VIEW RESULT TABLE (The "Perfect Table") --- */
+/* --- WEB VIEW RESULT TABLE --- */
 .portal-web-display {
     width: 100%;
+    margin: 0 auto;
 }
 
-.result-main-card {
-    border: 1px solid #dee2e6;
-    /* subtle border */
-    border-radius: 12px;
-    overflow: hidden;
-    /* rounded corners fix */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    /* soft lift */
-    background: #fff;
-    margin-bottom: 40px;
+.web-portal-header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 20px;
 }
 
-/* Header Grid */
+.web-portal-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1d3557;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
 /* Header Grid */
 .web-info-grid {
     display: grid;
@@ -56,7 +56,9 @@
     gap: 20px;
     background: #f8f9fa;
     padding: 30px;
-    border-bottom: 1px solid #dee2e6;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 30px;
 }
 
 .web-info-item {
@@ -66,7 +68,6 @@
     border: 1px solid #e9ecef;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     border-left: 4px solid #1d3557;
-    /* Brand accent */
 }
 
 .web-info-label {
@@ -76,7 +77,6 @@
     color: #6c757d;
     font-weight: 700;
     margin-bottom: 5px;
-    letter-spacing: 0.5px;
 }
 
 .web-info-value {
@@ -86,19 +86,15 @@
 }
 
 /* The Table Itself */
-.table-responsive {
-    overflow-x: auto;
-}
-
 .web-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
+    margin-bottom: 30px;
 }
 
 .web-table th {
     background: #1d3557;
-    /* Brand Blue */
     color: #ffffff;
     font-weight: 600;
     text-transform: uppercase;
@@ -114,250 +110,219 @@
     font-weight: 500;
 }
 
-/* Zebra Striping */
 .web-table tbody tr:nth-child(even) {
     background-color: #f8f9fa;
 }
 
-/* Hover Effect */
 .web-table tbody tr:hover {
     background-color: #e9ecef;
-    transition: background-color 0.2s ease;
 }
 
-/* Status Badges in Table */
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    font-weight: 700;
+.web-summary-row td {
+    background: #1d3557;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1rem;
 }
 
-.status-badge.PASS {
-    color: #155724;
-    background-color: #d4edda;
-}
-
-.status-badge.FAIL {
-    color: #721c24;
-    background-color: #f8d7da;
-}
-
-/* Footer Summary */
-.result-footer-summary {
-    display: flex;
-    justify-content: space-around;
+.web-stats-footer {
+    background: #f1f3f5;
     padding: 20px;
-    background: #fff;
-    border-top: 2px solid #1d3557;
-}
-
-.summary-stat {
+    border-radius: 8px;
     text-align: center;
+    border: 1px solid #dee2e6;
 }
 
-.summary-stat .label {
-    display: block;
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 5px;
-}
+/* ============================================= */
+/* SIMPLE PROFESSIONAL RESULT CARD (PDF)        */
+/* ============================================= */
 
-.summary-stat .value {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: #1d3557;
-}
-
-/* Print Button Wrapper */
-.print-action-bar {
-    display: flex;
-    justify-content: flex-end;
-    padding: 0 0 20px 0;
-}
-
-
-/* --- OFFICIAL REPORT STYLES (Keep strict for PDF) --- */
-/* These styles are used by ResultCard.jsx for the 'compact' report */
-.official-report-card.compact {
-    width: 500px;
+.official-report-card.simple-pro-a4 {
+    width: 794px;
+    /* A4 Width */
+    min-height: 1100px;
+    /* A4-ish height */
     background: #fff;
     color: #000;
-    padding: 5px;
-    font-family: 'Times New Roman', Times, serif;
-    border: none;
+    padding: 30px 40px;
+    font-family: 'Arial', sans-serif;
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
 }
 
-/* ... (Remaining Compact styles from previous step preserved below) ... */
-.compact-header {
+/* Header: Logo Left, Name Right */
+.simple-header {
     display: flex;
     align-items: center;
-    border-bottom: 2px solid #000;
-    padding-bottom: 5px;
+    gap: 20px;
     margin-bottom: 10px;
-    position: relative;
 }
 
-.compact-logo {
-    width: 45px;
-    height: 45px;
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+.simple-logo-large {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border: 1px solid #ddd;
 }
 
-.compact-titles {
+.simple-school-info {
     flex: 1;
-    text-align: center;
 }
 
-.compact-main-title {
-    font-size: 14pt;
+.simple-school-info h1 {
+    font-size: 22pt;
     font-weight: 900;
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: #000;
+    letter-spacing: 1px;
 }
 
-.compact-subtitle {
-    font-size: 8pt;
-    margin: 2px 0 4px;
+.simple-school-info p {
+    margin: 4px 0 0 0;
+    font-size: 11pt;
     color: #333;
 }
 
-.compact-session-box {
+.simple-session-text {
     display: inline-block;
-    border: 1px solid #000;
-    padding: 1px 8px;
-    font-size: 8pt;
-    font-weight: 700;
-    border-radius: 4px;
-    text-transform: uppercase;
-}
-
-.compact-student-grid {
-    display: grid;
-    grid-template-columns: 2fr 2fr 1fr 1fr;
-    gap: 8px;
-    border: 1px solid #000;
-    padding: 4px;
-    margin-bottom: 8px;
-    font-size: 9pt;
-}
-
-.compact-field {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px dashed #ccc;
-    padding-right: 5px;
-}
-
-.compact-field:last-child {
-    border-right: none;
-}
-
-.compact-field .label {
-    font-size: 7pt;
+    margin-top: 8px;
     font-weight: bold;
-    color: #444;
-    text-transform: uppercase;
-}
-
-.compact-field .value {
-    font-weight: 800;
-    font-size: 9pt;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.compact-table-wrapper {
-    margin-bottom: 10px;
-}
-
-.compact-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9pt;
-}
-
-.compact-table th {
-    border: 1px solid #000;
-    padding: 2px 4px;
-    background: #f0f0f0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    font-weight: 800;
-    text-align: center;
-}
-
-.compact-table td {
-    border: 1px solid #000;
-    padding: 2px 4px;
-    text-align: center;
-    font-weight: 500;
-}
-
-.compact-table .t-left {
-    text-align: left;
-    padding-left: 5px;
-    font-weight: 600;
-}
-
-.compact-total-row {
-    background: #f8f8f8 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    font-weight: 900;
-}
-
-.compact-footer-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-top: 15px;
-    padding-top: 5px;
-    border-top: 2px solid #000;
-}
-
-.stat-box {
-    font-size: 10pt;
-    font-weight: 800;
+    font-size: 12pt;
     border: 1px solid #000;
     padding: 3px 10px;
-    background: #eee;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    text-transform: uppercase;
 }
 
-.sign-area {
-    font-size: 9pt;
-    font-style: italic;
+/* Divider */
+.simple-divider {
+    width: 100%;
+    height: 2px;
+    background: #000;
+    margin: 15px 0;
+}
+
+/* Student Info Table (Simple Bordered) */
+.simple-student-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 11pt;
+}
+
+.simple-student-table td {
+    border: 1px solid #000;
+    padding: 8px 10px;
+}
+
+.simple-student-table .label-cell {
+    font-weight: bold;
+    background: #f5f5f5;
+    width: 150px;
+}
+
+.simple-student-table .value-cell {
     font-weight: 600;
-    padding-right: 20px;
 }
 
-.compact-print-date {
-    font-size: 6pt;
+/* Marks Table (Simple Bordered, No Colors) */
+.simple-marks-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    font-size: 11pt;
+}
+
+.simple-marks-table th {
+    border: 1px solid #000;
+    padding: 8px 5px;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: #f0f0f0;
     text-align: center;
-    color: #888;
-    margin-top: 8px;
-    border-top: 1px solid #ddd;
 }
 
-/* PDF Isolation Helper */
+.simple-marks-table td {
+    border: 1px solid #000;
+    padding: 7px 5px;
+    text-align: center;
+}
+
+.simple-marks-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+/* Summary Table (Narrow, Simple Bordered) */
+.simple-summary-table {
+    width: 60%;
+    margin: 0 auto 30px auto;
+    border-collapse: collapse;
+    font-size: 11pt;
+}
+
+.simple-summary-table td {
+    border: 1px solid #000;
+    padding: 8px 12px;
+    text-align: center;
+}
+
+.simple-summary-table .sum-label {
+    font-weight: bold;
+    background: #f5f5f5;
+    width: 40%;
+}
+
+.simple-summary-table .sum-value {
+    font-weight: 900;
+    font-size: 12pt;
+}
+
+/* Signatures */
+.simple-signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 60px;
+    padding: 0 30px;
+}
+
+.sig-block {
+    text-align: center;
+    width: 180px;
+}
+
+.sig-block .sig-line {
+    border-top: 1px solid #000;
+    margin-bottom: 5px;
+}
+
+.sig-block span {
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.simple-footer-meta {
+    position: absolute;
+    bottom: 15px;
+    width: calc(100% - 80px);
+    text-align: center;
+    font-size: 8pt;
+    color: #888;
+}
+
+/* PDF Helper */
 .hidden-for-pdf {
     position: absolute;
     left: -9999px;
-    top: -9999px;
     opacity: 0;
 }
 
-/* Print Overrides */
+/* Print Media Query */
 @media print {
     body {
-        background: #fff !important;
+        margin: 0;
+        padding: 0;
+        background: #fff;
     }
 
     .no-print,
@@ -370,11 +335,16 @@
         display: none !important;
     }
 
-    .official-report-card {
-        display: block !important;
+    .hidden-for-pdf {
         position: static !important;
         opacity: 1 !important;
+        left: 0 !important;
+    }
+
+    .official-report-card.simple-pro-a4 {
+        border: none !important;
         width: 100% !important;
+        padding: 0 !important;
         margin: 0 !important;
     }
 }

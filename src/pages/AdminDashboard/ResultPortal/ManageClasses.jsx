@@ -8,7 +8,7 @@ import {
     DeleteOutlined, SearchOutlined, PlusOutlined, ReloadOutlined,
     EditOutlined, UserOutlined, BookOutlined, CalendarOutlined,
     CheckCircleOutlined, SettingOutlined, TrophyOutlined,
-    SaveOutlined
+    SaveOutlined, CloudUploadOutlined, EyeOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { supabaseApi } from '../../../config/supabase';
@@ -24,13 +24,19 @@ const MasterResultHub = () => {
 
     // Data State
     const [sessions, setSessions] = useState([]);
-    const [allClasses, setAllClasses] = useState([]);
+    const [allClasses, setAllClasses] = useState([]); // Raw class data
     const [allSubjects, setAllSubjects] = useState([]);
     const [allStudents, setAllStudents] = useState([]);
 
-    // Filtering / Selection State
+    // Filtering State (Split Filter for View/Rapid Entry)
     const [selectedSessionId, setSelectedSessionId] = useState(null);
-    const [selectedClassId, setSelectedClassId] = useState(null);
+    const [viewClassName, setViewClassName] = useState(null);
+    const [viewSection, setViewSection] = useState(null); // String or null
+
+    // Helper: Derive actual class ID from Name + Section
+    const activeClassId = allClasses.find(c =>
+        c.name === viewClassName && (c.section === (viewSection || '') || (!c.section && !viewSection))
+    )?.id;
 
     // Marks Input State (Grid: marksData[studentId][subjectId] = value)
     const [marksData, setMarksData] = useState({});
@@ -79,8 +85,8 @@ const MasterResultHub = () => {
     };
 
     useEffect(() => {
-        if (selectedClassId) refreshStudents(selectedClassId);
-    }, [selectedClassId]);
+        if (activeClassId) refreshStudents(activeClassId);
+    }, [activeClassId]);
 
     // === CRUD OPERATIONS ===
     const handleModalSubmit = async (values) => {
@@ -89,9 +95,7 @@ const MasterResultHub = () => {
             const { type, mode, record } = modalConfig;
 
             if (type === 'class_section') {
-                // Bulk create sections for a class
                 const sections = values.sections || [];
-                // Combine preset sections and any custom text from the search/input
                 const finalSections = [...new Set(sections)];
 
                 const promises = finalSections.map(sec =>
@@ -101,17 +105,19 @@ const MasterResultHub = () => {
                     })
                 );
                 await Promise.all(promises);
-                message.success(`Class ${values.class_name} with sections ${finalSections.join(', ')} added!`);
+                message.success(`Class added!`);
             }
             else if (type === 'subject') {
                 await supabaseApi.insert('result_subjects', {
                     name: values.name,
                     class_id: values.class_id,
-                    max_marks: 100 // Default, will be updated in Planning tab
+                    max_marks: 100
                 });
                 message.success('Subject added!');
             }
             else if (type === 'student') {
+                // For enrollment, user might select a specific class directly in modal
+                // or we use a passed activeClassId.
                 if (mode === 'add') {
                     await supabaseApi.insert('result_students', {
                         full_name: values.full_name,
@@ -165,10 +171,10 @@ const MasterResultHub = () => {
 
     // === MARKS ENTRY GRID LOGIC ===
     const loadMarksGrid = async () => {
-        if (!selectedSessionId || !selectedClassId) return;
+        if (!selectedSessionId || !activeClassId) return;
         setLoading(true);
         try {
-            const classSubjects = allSubjects.filter(s => s.class_id === selectedClassId);
+            const classSubjects = allSubjects.filter(s => s.class_id === activeClassId);
             const subjectIds = classSubjects.map(s => s.id);
 
             if (subjectIds.length === 0) {
@@ -194,7 +200,7 @@ const MasterResultHub = () => {
 
     useEffect(() => {
         if (currentTab === '4') loadMarksGrid();
-    }, [selectedSessionId, selectedClassId, currentTab]);
+    }, [selectedSessionId, activeClassId, currentTab]);
 
     const handleSaveMarks = async () => {
         setSavingMarks(true);
@@ -224,6 +230,13 @@ const MasterResultHub = () => {
             setSavingMarks(false);
         }
     };
+
+    // === HELPERS FOR SELECTS ===
+    const uniqueClassNames = [...new Set(allClasses.map(c => c.name))];
+    const availableSections = allClasses
+        .filter(c => c.name === viewClassName)
+        .map(c => c.section)
+        .filter(s => s); // remove empty/null for list, but allow empty selection
 
     // === RENDER HELPERS ===
 
@@ -259,7 +272,6 @@ const MasterResultHub = () => {
                     title={<span><SettingOutlined /> Subjects List</span>}
                     extra={<Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => { setModalConfig({ type: 'subject', mode: 'add' }); setIsModalOpen(true); }}>Add Subject</Button>}
                 >
-                    <Alert message="Note" description="Total Marks can only be set in the 'Plan Tests' tab after creating a session." type="info" style={{ marginBottom: 12 }} />
                     <Table
                         size="small"
                         dataSource={allSubjects}
@@ -294,17 +306,28 @@ const MasterResultHub = () => {
         <Card title={<span><UserOutlined /> Student Enrollment</span>}>
             <Space style={{ marginBottom: 16 }}>
                 <Select
-                    placeholder="Select Class to Manage"
-                    style={{ width: 250 }}
-                    value={selectedClassId}
-                    onChange={setSelectedClassId}
+                    placeholder="Class Name"
+                    style={{ width: 150 }}
+                    value={viewClassName}
+                    onChange={(v) => { setViewClassName(v); setViewSection(null); }}
                 >
-                    {allClasses.map(c => <Option key={c.id} value={c.id}>{c.name} - Section {c.section}</Option>)}
+                    {uniqueClassNames.map(name => <Option key={name} value={name}>{name}</Option>)}
                 </Select>
+                <Select
+                    placeholder="Section (Opt)"
+                    style={{ width: 120 }}
+                    value={viewSection}
+                    onChange={setViewSection}
+                    allowClear
+                    disabled={!viewClassName}
+                >
+                    {availableSections.map(s => <Option key={s} value={s}>{s}</Option>)}
+                </Select>
+
                 <Button
                     type="primary"
                     icon={<PlusOutlined />}
-                    disabled={!selectedClassId}
+                    disabled={!activeClassId}
                     onClick={() => { setModalConfig({ type: 'student', mode: 'add' }); setIsModalOpen(true); }}
                 >
                     Enroll New Student
@@ -324,7 +347,7 @@ const MasterResultHub = () => {
                         render: (_, r) => (
                             <Space>
                                 <Button icon={<EditOutlined />} size="small" onClick={() => { setModalConfig({ type: 'student', mode: 'edit', record: r }); form.setFieldsValue(r); setIsModalOpen(true); }} />
-                                <Popconfirm title="Remove student?" onConfirm={() => handleDelete('result_students', r.id, () => refreshStudents(selectedClassId))}>
+                                <Popconfirm title="Remove student?" onConfirm={() => handleDelete('result_students', r.id, () => refreshStudents(activeClassId))}>
                                     <Button danger icon={<DeleteOutlined />} size="small" />
                                 </Popconfirm>
                             </Space>
@@ -363,21 +386,29 @@ const MasterResultHub = () => {
             </Card>
 
             <Card title={<span><SettingOutlined /> Session Subject Setup (Set Total Marks)</span>}>
-                <Alert
-                    message="Total Marks Configuration"
-                    description="Select a class below to set the Total Marks for its subjects for this session. This is the only place you can set max marks."
-                    type="success"
-                    showIcon
-                    style={{ marginBottom: 20 }}
-                />
                 <Space style={{ marginBottom: 20 }}>
-                    <Select placeholder="Select Class to Plan" style={{ width: 250 }} value={selectedClassId} onChange={setSelectedClassId}>
-                        {allClasses.map(c => <Option key={c.id} value={c.id}>{c.name} - Section {c.section}</Option>)}
+                    <Select
+                        placeholder="Class Name"
+                        style={{ width: 150 }}
+                        value={viewClassName}
+                        onChange={(v) => { setViewClassName(v); setViewSection(null); }}
+                    >
+                        {uniqueClassNames.map(name => <Option key={name} value={name}>{name}</Option>)}
+                    </Select>
+                    <Select
+                        placeholder="Section"
+                        style={{ width: 120 }}
+                        value={viewSection}
+                        onChange={setViewSection}
+                        allowClear
+                        disabled={!viewClassName}
+                    >
+                        {availableSections.map(s => <Option key={s} value={s}>{s}</Option>)}
                     </Select>
                 </Space>
 
                 <Table
-                    dataSource={allSubjects.filter(s => s.class_id === selectedClassId)}
+                    dataSource={allSubjects.filter(s => s.class_id === activeClassId)}
                     pagination={false}
                     columns={[
                         { title: 'Subject Name', dataIndex: 'name', key: 'name' },
@@ -414,27 +445,33 @@ const MasterResultHub = () => {
     const marksTab = (
         <div>
             <Card style={{ marginBottom: 20 }}>
-                <Row gutter={16}>
-                    <Col span={12}>
-                        <Text strong>Step 1: Select Session</Text>
-                        <Select block style={{ width: '100%', marginTop: 8 }} value={selectedSessionId} onChange={setSelectedSessionId}>
+                <Row gutter={16} align="middle">
+                    <Col span={8}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>1. Select Session</Text>
+                        <Select block value={selectedSessionId} onChange={setSelectedSessionId} size="large">
                             {sessions.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
                         </Select>
                     </Col>
-                    <Col span={12}>
-                        <Text strong>Step 2: Select Class & Section</Text>
-                        <Select block style={{ width: '100%', marginTop: 8 }} value={selectedClassId} onChange={setSelectedClassId}>
-                            {allClasses.map(c => <Option key={c.id} value={c.id}>{c.name} - {c.section}</Option>)}
+                    <Col span={8}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>2. Select Class</Text>
+                        <Select block value={viewClassName} onChange={(v) => { setViewClassName(v); setViewSection(null); }} size="large" placeholder="Select Class">
+                            {uniqueClassNames.map(name => <Option key={name} value={name}>{name}</Option>)}
+                        </Select>
+                    </Col>
+                    <Col span={8}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>3. Section (Optional)</Text>
+                        <Select block value={viewSection} onChange={setViewSection} allowClear disabled={!viewClassName} size="large" placeholder="Any / Empty">
+                            {availableSections.map(s => <Option key={s} value={s}>{s}</Option>)}
                         </Select>
                     </Col>
                 </Row>
             </Card>
 
-            {(!selectedSessionId || !selectedClassId) ? (
+            {(!selectedSessionId || !activeClassId) ? (
                 <Empty description="Select Session and Class to load the Marks Entry Grid" />
             ) : (
                 <Card
-                    title={`Rapid Marks Entry: ${sessions.find(s => s.id === selectedSessionId)?.name} | ${allClasses.find(c => c.id === selectedClassId)?.name}`}
+                    title={`Rapid Marks Entry: ${sessions.find(s => s.id === selectedSessionId)?.name} | ${viewClassName} ${viewSection ? `(${viewSection})` : ''}`}
                     extra={<Button type="primary" icon={<SaveOutlined />} loading={savingMarks} onClick={handleSaveMarks}>Save Entire Class Grid</Button>}
                     bodyStyle={{ padding: 0 }}
                 >
@@ -452,7 +489,7 @@ const MasterResultHub = () => {
                                         { title: 'Name', dataIndex: 'full_name', key: 'name', width: 150, fixed: 'left' },
                                     ]
                                 },
-                                ...allSubjects.filter(s => s.class_id === selectedClassId).map(sub => ({
+                                ...allSubjects.filter(s => s.class_id === activeClassId).map(sub => ({
                                     title: <div>{sub.name}<br /><span style={{ fontSize: 10, color: '#888' }}>(Max: {sub.max_marks})</span></div>,
                                     key: sub.id,
                                     width: 120,
@@ -492,7 +529,7 @@ const MasterResultHub = () => {
         { key: '1', label: <span><SettingOutlined /> Infrastructure</span>, children: infrastructureTab },
         { key: '2', label: <span><UserOutlined /> Enrollment</span>, children: studentTab },
         { key: '3', label: <span><CalendarOutlined /> Plan Tests</span>, children: sessionTab },
-        { key: '4', label: <span><CheckCircleOutlined /> Rapid Marks Entry</span>, children: marksTab }
+        { key: '4', label: <span><CheckCircleOutlined /> Show Results & Edit</span>, children: marksTab }
     ];
 
     return (
@@ -502,7 +539,23 @@ const MasterResultHub = () => {
                     <Title level={3} style={{ margin: 0 }}>Unified Result Hub</Title>
                     <Text type="secondary">Centralized Management & Rapid Multi-Subject Grading</Text>
                 </div>
-                <Button icon={<ReloadOutlined />} onClick={fetchAllData}>Sync Assets</Button>
+                <Space>
+                    <Button
+                        icon={<EyeOutlined />}
+                        onClick={() => setCurrentTab('4')}
+                        style={{ borderColor: '#1890ff', color: '#1890ff' }}
+                    >
+                        View Results
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<CloudUploadOutlined />}
+                        onClick={() => navigate('/dashboard/result-portal/upload')}
+                        style={{ background: '#52c41a', borderColor: '#52c41a' }}
+                    >
+                        Bulk Upload
+                    </Button>
+                </Space>
             </div>
 
             <Tabs
@@ -521,16 +574,16 @@ const MasterResultHub = () => {
                 footer={null}
                 destroyOnClose
             >
-                <Form form={form} layout="vertical" onFinish={handleModalSubmit} initialValues={{ class_id: selectedClassId }}>
+                <Form form={form} layout="vertical" onFinish={handleModalSubmit} initialValues={{ class_id: activeClassId }}>
                     {modalConfig.type === 'class_section' && (
                         <>
                             <Form.Item name="class_name" label="Class Name (e.g. 9th, 10th)" rules={[{ required: true }]}>
                                 <Input placeholder="Enter class name" />
                             </Form.Item>
-                            <Form.Item name="sections" label="Sections (Search or Select)" rules={[{ required: true }]}>
+                            <Form.Item name="sections" label="Sections (Optional)" rules={[{ required: false }]}>
                                 <Select
                                     mode="tags"
-                                    placeholder="Select or type your OWN section"
+                                    placeholder="Select or type section (leave empty if none)"
                                     tokenSeparators={[',']}
                                 >
                                     {['A', 'B', 'C', 'D', 'Science', 'Arts', 'General'].map(s => <Option key={s}>{s}</Option>)}
