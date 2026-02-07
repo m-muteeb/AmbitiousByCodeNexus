@@ -10,7 +10,7 @@ import {
     CheckCircleOutlined, SettingOutlined, TrophyOutlined,
     SaveOutlined, CloudUploadOutlined, EyeOutlined
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabaseApi } from '../../../config/supabase';
 
 const { Title, Text } = Typography;
@@ -18,9 +18,16 @@ const { Option } = Select;
 
 const MasterResultHub = () => {
     // === STATE ===
-    const [loading, setLoading] = useState(false);
-    const [currentTab, setCurrentTab] = useState('1');
     const navigate = useNavigate();
+    const location = useLocation();
+    const [currentTab, setCurrentTab] = useState('1');
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (location.state && location.state.activeTab) {
+            setCurrentTab(location.state.activeTab);
+        }
+    }, [location.state]);
 
     // Data State
     const [sessions, setSessions] = useState([]);

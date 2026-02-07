@@ -149,9 +149,10 @@ const UploadResults = () => {
 
         const potentialRow1 = data[1];
         // Check contents of potential identifiers
-        const valRoll = String(potentialRow1 && potentialRow1[rollIndex] || '').trim();
-        const valName = String(potentialRow1 && potentialRow1[nameIndex] || '').trim();
-        const valFather = fatherIndex !== -1 ? String(potentialRow1 && potentialRow1[fatherIndex] || '').trim() : '';
+        // Check contents of potential identifiers
+        const valRoll = String((potentialRow1 && potentialRow1[rollIndex]) || '').trim();
+        const valName = String((potentialRow1 && potentialRow1[nameIndex]) || '').trim();
+        const valFather = fatherIndex !== -1 ? String((potentialRow1 && potentialRow1[fatherIndex]) || '').trim() : '';
 
         // 1. Check for Explicit "Max" keyword in ANY identifier column
         const isExplicitMax =
@@ -204,20 +205,25 @@ const UploadResults = () => {
             if (index !== rollIndex && index !== nameIndex && index !== fatherIndex && index !== classIndex) {
                 if (!['total', 'class', 'student id', 'id', '%age', '%'].some(k => colStr.includes(k))) {
 
-                    // STRICT FILTERING: Column MUST have at least ONE valid mark > 0
-                    // This removes columns where everyone has "-", "0", or empty values
+                    // STRICT FILTERING: Column MUST have at least ONE valid data point (numeric >= 0 OR 'ABS')
+                    // This removes columns where everyone has "-", empty values, or purely invalid text.
                     const hasValidData = studentRawRows.some(row => {
                         const rawVal = row[index];
-                        // Skip if undefined, null, or "-"
                         if (rawVal === undefined || rawVal === null) return false;
-                        const strVal = String(rawVal).trim();
-                        if (strVal === '' || strVal === '-' || strVal.toLowerCase() === 'a') return false;
-                        // Try to parse as number
+                        const strVal = String(rawVal).trim().toUpperCase();
+
+                        // Check for valid "Absent" indicators
+                        if (['A', 'ABS', 'ABSENT'].includes(strVal)) return true;
+
+                        // Skip completely empty or placeholder chars
+                        if (strVal === '' || strVal === '-') return false;
+
+                        // Try to parse as number (allow 0)
                         const numVal = parseFloat(strVal);
-                        return !isNaN(numVal) && numVal > 0;
+                        return !isNaN(numVal) && numVal >= 0;
                     });
 
-                    // ONLY add if at least one student has a valid mark > 0
+                    // ONLY add if at least one student has a valid mark (including 0 or ABS)
                     if (hasValidData) {
                         subjectIndices.push(index);
                     }
@@ -370,21 +376,32 @@ const UploadResults = () => {
                 // C. Upsert Students
                 const classRows = rowsByClass[className];
                 const existingStudents = await supabaseApi.fetch('result_students', `class_id=eq.${classId}`);
-                const studentsToUpsert = [];
+
+                const studentsToInsert = [];
+                const studentsToUpdate = [];
 
                 classRows.forEach(row => {
                     const roll = row[rollIndex];
                     const name = row[nameIndex];
-                    const fatherName = fatherIndex !== -1 ? row[fatherIndex] : '';
+                    // Ensure values are strings and never undefined
+                    const rollVal = roll ? String(roll).trim() : '';
+                    const nameVal = name ? String(name).trim() : '';
+                    const fatherName = (fatherIndex !== -1 && row[fatherIndex]) ? String(row[fatherIndex]).trim() : '';
 
-                    if (roll && name) {
-                        const existing = existingStudents?.find(es => es.roll_number == roll);
+                    if (rollVal && nameVal) {
+                        const existing = existingStudents?.find(es => es.roll_number == rollVal);
                         if (existing) {
-                            studentsToUpsert.push({ ...existing, full_name: name, father_name: fatherName });
+                            studentsToUpdate.push({
+                                id: existing.id,
+                                roll_number: rollVal,
+                                full_name: nameVal,
+                                father_name: fatherName,
+                                class_id: classId
+                            });
                         } else {
-                            studentsToUpsert.push({
-                                roll_number: roll,
-                                full_name: name,
+                            studentsToInsert.push({
+                                roll_number: rollVal,
+                                full_name: nameVal,
                                 father_name: fatherName,
                                 class_id: classId
                             });
@@ -392,8 +409,12 @@ const UploadResults = () => {
                     }
                 });
 
-                if (studentsToUpsert.length > 0) {
-                    await supabaseApi.upsert('result_students', studentsToUpsert);
+                if (studentsToInsert.length > 0) {
+                    await supabaseApi.insert('result_students', studentsToInsert);
+                }
+
+                if (studentsToUpdate.length > 0) {
+                    await supabaseApi.upsert('result_students', studentsToUpdate);
                 }
 
                 // D. Upsert Marks
@@ -413,11 +434,14 @@ const UploadResults = () => {
 
                         let rawMark = row[idx];
                         let obtained = 0;
-                        if (typeof rawMark === 'string') {
-                            if (rawMark.toUpperCase().trim() === 'A') obtained = 0;
-                            else obtained = parseFloat(rawMark) || 0;
+                        const strMark = String(rawMark || '').trim().toUpperCase();
+
+                        if (strMark.startsWith('A') || ['FAIL', 'F'].includes(strMark)) {
+                            obtained = 0;
                         } else {
-                            obtained = parseFloat(rawMark) || 0;
+                            // strictly parse float, default to 0 if NaN/invalid
+                            obtained = parseFloat(strMark);
+                            if (isNaN(obtained)) obtained = 0;
                         }
 
                         marksToUpsert.push({
@@ -434,12 +458,31 @@ const UploadResults = () => {
                 }
             }
 
-            message.success(`Saved successfully!`);
-            navigate('/dashboard/result-portal/manage');
+            message.success({
+                content: "✅ All results uploaded successfully!",
+                duration: 3,
+                style: { marginTop: '20vh' }
+            });
+            navigate('/dashboard/result-portal/manage', { state: { activeTab: '4' } });
 
         } catch (error) {
-            console.error(error);
-            message.error("Error processing upload: " + error.message);
+            console.error("Upload Error:", error);
+            let errMsg = error.message || "Unknown error occurred";
+
+            // Try to parse if it's a JSON string (Supabase often returns this)
+            try {
+                if (errMsg.startsWith('{') || errMsg.startsWith('[')) {
+                    const errObj = JSON.parse(errMsg);
+                    errMsg = errObj.message || errObj.error_description || errMsg;
+                    if (errObj.details) errMsg += ` (${errObj.details})`;
+                }
+            } catch (e) { /* ignore parse error */ }
+
+            message.error({
+                content: `Upload Failed: ${errMsg}`,
+                duration: 5,
+                style: { marginTop: '20vh' } // Ensure visibility
+            });
         } finally {
             setSaving(false);
         }
