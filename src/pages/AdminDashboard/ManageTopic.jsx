@@ -119,7 +119,7 @@ const ManageTopics = () => {
   });
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div style={{ padding: "8px 0" }}>
       <Card style={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <h2 style={{ margin: 0, fontWeight: 900, color: '#1d3557' }}>Content Library</h2>
@@ -143,11 +143,12 @@ const ManageTopics = () => {
           />
           <Select defaultValue="all" style={{ width: 140 }} onChange={setFilterClass}>
             <Option value="all">All Grades</Option>
+            <Option value="8th">8th</Option>
             <Option value="9th">9th</Option>
             <Option value="10th">10th</Option>
             <Option value="11th">11th</Option>
             <Option value="12th">12th</Option>
-            <Option value="ECAT">ECAT</Option>
+            <Option value="ecat">ECAT</Option>
             <Option value="Primary">Primary</Option>
           </Select>
         </Space>

@@ -17,7 +17,6 @@ const PremiumTests = () => {
     const columns = [
         { title: "Topic", dataIndex: "topic", key: "topic" },
         { title: "Class", dataIndex: "class", key: "class" },
-        { title: "Subject", dataIndex: "subject", key: "subject" },
         {
             title: "Action",
             key: "action",

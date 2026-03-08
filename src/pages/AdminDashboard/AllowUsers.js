@@ -10,20 +10,21 @@ import PremiumUser from './PremiumUser';
 const { Title } = Typography;
 
 const AdminUserList = () => {
-  const [counts, setCounts] = useState({ notChanged: 0, changed: 0, premium: 0 });
+  const [counts, setCounts] = useState({ student: 0, changed: 0, premium: 0, pending: 0 });
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('dashboard'); // 'dashboard', 'not-changed', 'changed', 'premium'
+  const [view, setView] = useState('dashboard'); // 'dashboard', 'user-console', 'changed', 'premium'
   const navigate = useNavigate();
 
   const fetchUserCounts = async () => {
     setLoading(true);
     try {
       const allProfiles = await supabaseApi.fetch('profiles');
-      const notChanged = allProfiles.filter(u => u.role === 'user').length;
+      const pending = allProfiles.filter(u => u.role === 'user').length;
       const changed = allProfiles.filter(u => u.role === 'admin' || u.role === 'superadmin').length;
       const premium = allProfiles.filter(u => u.role === 'premium').length;
+      const student = allProfiles.filter(u => u.role === 'student').length;
 
-      setCounts({ notChanged, changed, premium });
+      setCounts({ pending, changed, premium, student });
     } catch (err) {
       console.error('Error fetching user counts:', err);
       message.error('Failed to load user statistics');
@@ -45,83 +46,99 @@ const AdminUserList = () => {
   }
 
   // Render Sub-view if active
-  if (view === 'not-changed') return <RoleNotChangedUsers goBack={() => { setView('dashboard'); fetchUserCounts(); }} />;
+  if (view === 'user-console') return <RoleNotChangedUsers goBack={() => { setView('dashboard'); fetchUserCounts(); }} />;
   if (view === 'changed') return <RoleChangedUsers goBack={() => { setView('dashboard'); fetchUserCounts(); }} />;
   if (view === 'premium') return <PremiumUser goBack={() => { setView('dashboard'); fetchUserCounts(); }} />;
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '8px 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div style={{ flex: 1 }} />
-        <Title level={2} style={{ margin: 0, textAlign: 'center', flex: 2 }}>User Management Center</Title>
+        <Title level={2} style={{ margin: 0, textAlign: 'center', flex: 3 }}>Users Management Hub</Title>
         <div style={{ flex: 1, textAlign: 'right' }}>
-          <Button icon={<ReloadOutlined />} onClick={fetchUserCounts} loading={loading}>Refresh</Button>
+          <Button icon={<ReloadOutlined />} onClick={fetchUserCounts} loading={loading}>Refresh Stats</Button>
         </div>
       </div>
 
       <Row gutter={[24, 24]} justify="center">
-        {/* Card for Users with 'user' role */}
-        <Col xs={24} sm={12} lg={8}>
+        {/* Main Console Button */}
+        <Col xs={24} style={{ textAlign: 'center', marginBottom: 20 }}>
+          <Button
+            type="primary"
+            size="large"
+            icon={<ReloadOutlined />}
+            onClick={() => setView('user-console')}
+            style={{ height: 60, padding: '0 40px', fontSize: 18, borderRadius: 30 }}
+          >
+            Open Unified User Console
+          </Button>
+        </Col>
+
+        {/* Card for Students */}
+        <Col xs={24} sm={12} lg={6}>
           <Card
             hoverable
             style={{ textAlign: 'center', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-            actions={[
-              <Button type="primary" onClick={() => setView('not-changed')}>
-                Manage Requests
-              </Button>
-            ]}
           >
             <Statistic
-              title="New User Requests"
-              value={counts.notChanged}
+              title="Students"
+              value={counts.student}
               prefix={<UserOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              valueStyle={{ color: '#13c2c2' }}
             />
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>Users waiting for role assignment</div>
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>Registered student accounts</div>
           </Card>
         </Col>
 
-        {/* Card for Users with 'admin' role */}
-        <Col xs={24} sm={12} lg={8}>
+        {/* Card for Institutions */}
+        <Col xs={24} sm={12} lg={6}>
           <Card
             hoverable
             style={{ textAlign: 'center', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-            actions={[
-              <Button type="primary" onClick={() => setView('changed')}>
-                Manage Admins
-              </Button>
-            ]}
           >
             <Statistic
-              title="Active Administrators"
+              title="Institutions"
               value={counts.changed}
               prefix={<SafetyCertificateOutlined />}
-              valueStyle={{ color: '#52c41a' }}
+              valueStyle={{ color: '#1890ff' }}
             />
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>Users with system management access</div>
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>Active institutional admins</div>
           </Card>
         </Col>
 
         {/* Card for Premium Users */}
-        <Col xs={24} sm={12} lg={8}>
+        <Col xs={24} sm={12} lg={6}>
           <Card
             hoverable
             style={{ textAlign: 'center', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-            actions={[
-              <Button type="primary" onClick={() => setView('premium')}>
-                Manage Premium
-              </Button>
-            ]}
           >
             <Statistic
-              title="Premium Members"
+              title="Premium"
               value={counts.premium}
               prefix={<CrownOutlined />}
               valueStyle={{ color: '#faad14' }}
             />
-            <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>Users with access to premium content</div>
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>Members with full access</div>
           </Card>
         </Col>
+
+        {/* Card for Pending (Legacy) */}
+        {counts.pending > 0 && (
+          <Col xs={24} sm={12} lg={6}>
+            <Card
+              hoverable
+              style={{ textAlign: 'center', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(255, 169, 64, 0.1)' }}
+            >
+              <Statistic
+                title="Pending Approval"
+                value={counts.pending}
+                prefix={<UserOutlined />}
+                valueStyle={{ color: '#ffa940' }}
+              />
+              <div style={{ marginTop: 8, fontSize: '12px', color: '#888' }}>Legacy manual requests</div>
+            </Card>
+          </Col>
+        )}
       </Row>
     </div>
   );

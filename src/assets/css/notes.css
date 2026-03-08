@@ -1,5 +1,6 @@
 .edu-portal-container {
   animation: fadeIn 0.8s ease-out;
+  background: #ffffff;
 }
 
 @keyframes fadeIn {
@@ -14,86 +15,263 @@
   }
 }
 
-.subject-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.subjects-premium-container {
+  padding: 20px 0;
 }
 
-.subject-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(29, 53, 87, 0.1) !important;
-}
-
-.subject-card.active {
-  border: 2px solid #1d3557 !important;
-  background: #f1faee;
-}
-
-.resource-item-card {
-  transition: all 0.2s ease;
-  border-left: 4px solid transparent !important;
-}
-
-.resource-item-card:hover {
-  border-left: 4px solid #457b9d !important;
-  background: #fdfdfd;
-}
-
-.ant-select-selector {
-  border-radius: 8px !important;
-  border: 1px solid #e9ecef !important;
-}
-
-.ant-select-selection-placeholder {
-  color: #adb5bd !important;
-}
-
-.clickable-post-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.resource-item-card-lite {
-  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+.premium-subject-card {
+  border-radius: 20px !important;
   border: 1px solid #f0f0f0 !important;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+  position: relative;
+  overflow: hidden;
+  background: #ffffff !important;
 }
 
-.resource-item-card-lite:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+.premium-subject-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(29, 53, 87, 0.1) !important;
   border-color: #1d3557 !important;
 }
 
-.file-list-item-hover {
-  transition: all 0.2s ease;
+.card-decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, transparent 50%, #f8fbff 50%);
+  z-index: 1;
 }
 
-.file-list-item-hover:hover {
-  background-color: #f1faee;
-  border-color: #a8dadc !important;
+.subject-icon-box {
+  width: 54px;
+  height: 54px;
+  background: #f1f4f8;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #1d3557;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.premium-subject-card:hover .subject-icon-box {
+  background: #1d3557;
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.subject-title {
+  margin: 0 !important;
+  font-weight: 800 !important;
+  color: #1d3557 !important;
+}
+
+.subject-meta {
+  font-size: 0.85rem !important;
+  display: block;
+  margin-bottom: 24px !important;
+}
+
+.premium-category-select {
+  width: 100%;
+}
+
+.premium-category-select .ant-select-selector {
+  height: 48px !important;
+  padding: 8px 16px !important;
+  border-radius: 12px !important;
+  background: #f8fbff !important;
+  border: 2px solid transparent !important;
+  transition: all 0.3s ease !important;
+}
+
+.premium-category-select:hover .ant-select-selector {
+  border-color: #1d3557 !important;
+  background: #ffffff !important;
+}
+
+.premium-category-select.ant-select-focused .ant-select-selector {
+  border-color: #1d3557 !important;
+  box-shadow: 0 0 0 4px rgba(29, 53, 87, 0.1) !important;
+}
+
+/* Modal Improvements */
+.resource-file-row {
+  padding: 0 !important;
+  margin-bottom: 12px;
+  border: none !important;
+}
+
+.premium-file-card {
+  width: 100%;
+  border-radius: 14px !important;
+  border: 1px solid #f1f3f5 !important;
+  transition: all 0.3s ease !important;
+}
+
+.premium-file-card:hover {
+  border-color: #1d3557 !important;
+  box-shadow: 0 4px 15px rgba(29, 53, 87, 0.08) !important;
+}
+
+.file-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.file-type-icon {
+  font-size: 24px;
+  color: #ff4d4f;
+  background: #fff1f0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.file-info-main {
+  flex: 1;
+}
+
+.file-display-name {
+  font-weight: 700;
+  color: #1d3557;
+  font-size: 1rem;
+}
+
+.file-topic-tag {
+  font-size: 0.75rem;
+  color: #8c8c8c;
+  margin-top: 2px;
+}
+
+.btn-view {
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  background: #1d3557 !important;
+}
+
+.btn-download {
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+}
+
+/* Empty State Styles */
+.empty-state-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.uploading-text-big {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #1d3557;
+  margin-bottom: 15px;
+}
+
+.uploading-subtext {
+  font-size: 1rem;
+  color: #457b9d;
+  max-width: 400px;
+}
+
+.modal-premium-header {
+  display: flex;
+  align-items: center;
+}
+
+.modal-title-text {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #1d3557;
 }
 
 .results-overlay-modal .ant-modal-content {
-  border-radius: 16px !important;
+  border-radius: 24px !important;
   overflow: hidden;
 }
 
-.results-overlay-modal .ant-modal-header {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 16px 24px;
+.resource-item-card-lite {
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  border: 1px solid #f0f0f0 !important;
+  transition: all 0.3s ease !important;
 }
 
-.results-section {
-  animation: slideUp 0.5s ease-out;
+.resource-item-card-lite:hover {
+  background: #f8fbff !important;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* Mobile Responsiveness & Performance Tweaks */
+@media (max-width: 768px) {
+  .edu-portal-container {
+    padding: 20px 10px !important;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .file-card-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
+
+  .file-actions {
+    width: 100%;
+  }
+
+  .file-actions .ant-space {
+    width: 100%;
+    display: flex;
+  }
+
+  .file-actions button {
+    flex: 1;
+    height: 40px;
+  }
+
+  .modal-title-text {
+    font-size: 0.95rem;
+    white-space: normal;
+  }
+
+  .uploading-text-big {
+    font-size: 1.4rem;
+  }
+
+  .subjects-premium-container {
+    padding: 10px 0;
+  }
+
+  .premium-subject-card {
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .file-display-name {
+    font-size: 0.9rem;
+  }
+
+  .edu-portal-container h1 {
+    font-size: 1.8rem !important;
+  }
+}
+
+/* Hardware acceleration for smooth animations */
+.premium-subject-card,
+.premium-file-card {
+  will-change: transform;
+  backface-visibility: hidden;
 }

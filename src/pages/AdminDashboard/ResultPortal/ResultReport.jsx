@@ -57,7 +57,6 @@ const ResultReport = () => {
 
     setLoading(true);
     try {
-      // 1. Fetch Students
       const students = await supabaseApi.fetch('result_students', `class_id=eq.${selectedClass}`);
       if (!students?.length) {
         setReportData([]);
@@ -66,17 +65,15 @@ const ResultReport = () => {
         return;
       }
 
-      // 2. Fetch Marks for these students in this session
       const studentIds = students.map(s => s.id).join(',');
       let marksQuery = `session_id=eq.${selectedSession}&student_id=in.(${studentIds})`;
 
       const allMarks = await supabaseApi.fetch('result_marks', marksQuery);
 
-      // 3. Process Data
       let processed = students.map(student => {
         const studentMarks = allMarks.filter(m => m.student_id === student.id);
+        if (studentMarks.length === 0) return null;
 
-        // Calculate Totals
         let totalObtained = 0;
         let totalMax = 0;
         let passStatus = "PASS";
@@ -84,7 +81,7 @@ const ResultReport = () => {
 
         studentMarks.forEach(m => {
           const subjectMeta = subjects.find(s => s.id === m.subject_id);
-          const max = subjectMeta?.max_marks || 100; // Default or fetch
+          const max = m.max_marks || subjectMeta?.max_marks || 100;
           const pass = subjectMeta?.passing_marks || 33;
 
           totalObtained += m.obtained_marks;
@@ -111,13 +108,10 @@ const ResultReport = () => {
           status: passStatus,
           details: subjectDetails
         };
-      });
+      }).filter(s => s !== null);
 
-      // 4. Sort and Calculate Position (Handling Ties)
-      // Sort descending by totalObtained
       processed.sort((a, b) => b.totalObtained - a.totalObtained);
 
-      // Assign Rank
       for (let i = 0; i < processed.length; i++) {
         if (i > 0 && processed[i].totalObtained === processed[i - 1].totalObtained) {
           processed[i].position = processed[i - 1].position;
@@ -128,7 +122,6 @@ const ResultReport = () => {
 
       setReportData(processed);
 
-      // Calculate Stats
       const passed = processed.filter(p => p.status === "PASS").length;
       const failed = processed.length - passed;
       const max = Math.max(...processed.map(p => p.percentage));
@@ -166,7 +159,8 @@ const ResultReport = () => {
 
     const doc = new jsPDF();
     const sessionName = sessions.find(s => s.id === selectedSession)?.name;
-    const className = classes.find(c => c.id === selectedClass)?.name + ' - ' + classes.find(c => c.id === selectedClass)?.section;
+    const currentClass = classes.find(c => c.id === selectedClass);
+    const className = currentClass ? `${currentClass.name} - ${currentClass.section || ''}` : 'Class';
 
     doc.setFontSize(18);
     doc.text("AMBITIOUS EDUCATIONAL SYSTEM", 105, 15, { align: "center" });
@@ -177,7 +171,6 @@ const ResultReport = () => {
     if (type === 'subject') {
       if (!selectedSubject) return message.error("Please select a subject for Subject Result");
       const subjName = subjects.find(s => s.id === selectedSubject)?.name;
-
       doc.text(`Subject: ${subjName}`, 105, 34, { align: "center" });
 
       const tableBody = reportData.map(student => {
@@ -199,7 +192,6 @@ const ResultReport = () => {
       });
 
     } else {
-      // Overall Report
       doc.text(`Overall Class Performance`, 105, 34, { align: "center" });
 
       const tableBody = reportData.map(s => [
@@ -221,13 +213,11 @@ const ResultReport = () => {
         headStyles: { fillColor: [29, 53, 87] }
       });
 
-      // Add Stats Footer
       let finalY = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(10);
       doc.text(`Total Students: ${stats.totalStudents} | Passed: ${stats.passCount} | Failed: ${stats.failCount}`, 14, finalY);
       doc.text(`Highest %: ${stats.maxMarks}% | Lowest %: ${stats.minMarks}%`, 14, finalY + 6);
     }
-
     doc.save(`Result_${className}_${type}.pdf`);
   };
 
@@ -257,7 +247,7 @@ const ResultReport = () => {
   ];
 
   return (
-    <div style={{ padding: 24, background: '#f0f2f5', minHeight: '100vh' }}>
+    <div style={{ padding: '8px 0', maxWidth: 1400, margin: '0 auto' }}>
       <Space style={{ marginBottom: 20 }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>Back to Hub</Button>
       </Space>
@@ -320,7 +310,6 @@ const ResultReport = () => {
           </Card>
         </>
       )}
-
     </div>
   );
 };

@@ -43,7 +43,7 @@ const Router = () => {
             <Route
                 path="/dashboard/*"
                 element={
-                    <PrivateRoute requiredRoles={['admin', 'superadmin']}>
+                    <PrivateRoute requiredRoles={['superadmin']}>
                         <Dashboard />
                     </PrivateRoute>
                 }

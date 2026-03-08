@@ -154,11 +154,11 @@ const UploadResults = () => {
         const valName = String((potentialRow1 && potentialRow1[nameIndex]) || '').trim();
         const valFather = fatherIndex !== -1 ? String((potentialRow1 && potentialRow1[fatherIndex]) || '').trim() : '';
 
-        // 1. Check for Explicit "Max" keyword in ANY identifier column
+        // 1. Check for Explicit "Max" or "Total" keyword in ANY identifier column
         const isExplicitMax =
-            valRoll.toLowerCase().includes('max') ||
-            valName.toLowerCase().includes('max') ||
-            valFather.toLowerCase().includes('max');
+            valRoll.toLowerCase().includes('max') || valRoll.toLowerCase().includes('total') ||
+            valName.toLowerCase().includes('max') || valName.toLowerCase().includes('total') ||
+            (fatherIndex !== -1 && (valFather.toLowerCase().includes('max') || valFather.toLowerCase().includes('total')));
 
         // 2. Check if Roll/Name are "Real" (contain alphanumerics, not just '-' or empty)
         // User example: Roll='-', Name='-' -> These are NOT valid student identifiers
@@ -246,11 +246,17 @@ const UploadResults = () => {
             return obj;
         });
 
-        setTableData(formattedRows);
+        // Prepend Max Marks Row
+        const maxMarksObj = { key: 'MAX_MARKS' };
+        headerRow.forEach((_, colIdx) => {
+            maxMarksObj[colIdx] = maxMarksRow[colIdx];
+        });
+
+        setTableData([maxMarksObj, ...formattedRows]);
 
         setParsedMetaData({
             headerRow,
-            maxMarksRow,
+            // maxMarksRow, // We dont need this in metadata anymore as it is in the table
             rollIndex,
             classIndex,
             nameIndex,
@@ -260,7 +266,7 @@ const UploadResults = () => {
             percentageIndex
         });
 
-        message.success(`Loaded ${studentRawRows.length} students. Edit cells directly!`);
+        message.success(`Loaded ${studentRawRows.length} students. Top row is Max Marks. Edit cells directly!`);
     };
 
     const tableColumns = useMemo(() => {
@@ -271,14 +277,29 @@ const UploadResults = () => {
             dataIndex: colIndex,
             key: colIndex,
             width: 150,
-            render: (text, record) => (
-                <Input
-                    value={record[colIndex]}
-                    onChange={(e) => handleCellChange(e.target.value, record.key, colIndex)}
-                    style={{ border: 'none', background: 'transparent', padding: '4px 0' }}
-                    className="editable-input"
-                />
-            )
+            render: (text, record) => {
+                const isMaxMarksRow = record.key === 'MAX_MARKS';
+                const isSubject = parsedMetaData.subjectIndices.includes(colIndex);
+
+                if (isMaxMarksRow && !isSubject) {
+                    return <span style={{ color: '#999', fontSize: 12, fontStyle: 'italic' }}>Max Marks</span>;
+                }
+
+                return (
+                    <Input
+                        value={record[colIndex]}
+                        onChange={(e) => handleCellChange(e.target.value, record.key, colIndex)}
+                        style={{
+                            border: 'none',
+                            background: 'transparent',
+                            padding: '4px 0',
+                            fontWeight: isMaxMarksRow ? 'bold' : 'normal',
+                            color: isMaxMarksRow ? '#cf1322' : 'inherit'
+                        }}
+                        className="editable-input"
+                    />
+                );
+            }
         }));
     }, [parsedMetaData, handleCellChange]);
 
@@ -290,7 +311,18 @@ const UploadResults = () => {
 
         setSaving(true);
         try {
-            const { headerRow, maxMarksRow, rollIndex, classIndex, nameIndex, fatherIndex, subjectIndices } = parsedMetaData;
+            const { headerRow, rollIndex, classIndex, nameIndex, fatherIndex, subjectIndices } = parsedMetaData;
+
+            // 0. Extract Max Marks Row from Table Data
+            const maxMarksObj = tableData.find(r => r.key === 'MAX_MARKS');
+            if (!maxMarksObj) throw new Error("Max Marks row is missing.");
+
+            // Reconstruct maxMarksRow array
+            const maxMarksRow = headerRow.map((_, idx) => maxMarksObj[idx]);
+
+            // Filter out Max Marks row to get students
+            const studentRowsData = tableData.filter(r => r.key !== 'MAX_MARKS');
+
 
             // 1. RESOLVE SESSION
             let sessionId = null;
@@ -309,7 +341,7 @@ const UploadResults = () => {
             // 2. RECONSTRUCT ROWS FROM TABLE DATA
             const rowsByClass = {};
 
-            tableData.forEach(rowObj => {
+            studentRowsData.forEach(rowObj => {
                 // Normalize class name again just in case user edited it in the grid
                 const className = normalizeClassName(rowObj[classIndex]);
                 if (className) {
@@ -353,19 +385,22 @@ const UploadResults = () => {
 
                     let subject = existingSubjects?.find(s => s.name.toLowerCase() === subjectName.toLowerCase());
 
+                    // FIXED LOGIC: Only create subject if it doesn't exist. 
+                    // DO NOT overwrite existing subject's max_marks with this round's max_marks.
+                    // This prevents "Round 3 (85 marks)" from ruining "Round 1 (100 marks)" defaults.
+
                     if (!subject) {
-                        // Insert
-                        const [newSub] = await supabaseApi.upsert('result_subjects', [{
+                        const payload = {
                             name: subjectName,
                             class_id: classId,
-                            max_marks: maxMarks
-                        }]);
-                    } else if (subject.max_marks !== maxMarks) {
-                        await supabaseApi.update('result_subjects', { max_marks: maxMarks }, `id=eq.${subject.id}`);
+                            max_marks: maxMarks // Set initial default to whatever this first upload has
+                        };
+                        await supabaseApi.upsert('result_subjects', [payload]);
                     }
+                    // If subject exists, we do NOTHING to it. We will save the specific max_marks in result_marks.
                 }
 
-                // Re-fetch subjects
+                // Re-fetch subjects to ensure we have IDs for marks entry
                 const finalSubjects = await supabaseApi.fetch('result_subjects', `class_id=eq.${classId}`);
                 subjectIndices.forEach(idx => {
                     const sName = headerRow[idx];
@@ -448,7 +483,8 @@ const UploadResults = () => {
                             student_id: studentId,
                             subject_id: subjectId,
                             session_id: sessionId,
-                            obtained_marks: obtained
+                            obtained_marks: obtained,
+                            max_marks: parseFloat(maxMarksRow[idx]) || 100 // Save per-session max marks
                         });
                     });
                 });
@@ -489,7 +525,7 @@ const UploadResults = () => {
     };
 
     return (
-        <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ padding: '8px 0', maxWidth: 1400, margin: '0 auto' }}>
             <style>{`
                 .editable-input:focus {
                     background: #fff !important;

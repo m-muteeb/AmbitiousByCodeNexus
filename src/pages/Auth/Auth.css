@@ -142,3 +142,36 @@
         padding: 30px 20px;
     }
 }
+
+.role-selector-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    background: #f8f9fa;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.role-tab {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-weight: 700;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.role-tab.active {
+    background: #1d3557;
+    color: white;
+    box-shadow: 0 4px 12px rgba(29, 53, 87, 0.15);
+}
+
+.role-tab:hover:not(.active) {
+    background: #e9ecef;
+    color: #1d3557;
+}

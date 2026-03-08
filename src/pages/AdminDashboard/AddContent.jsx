@@ -32,6 +32,7 @@ const AddContent = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isPremium, setIsPremium] = useState(false);
     const [form] = Form.useForm();
+    const class_level = Form.useWatch('class_level', form);
 
     const uploadFileToStorage = async (file, currentClass) => {
         try {
@@ -42,7 +43,7 @@ const AddContent = () => {
             const { error } = await supabase.storage
                 .from('content-files')
                 .upload(filePath, file, {
-                    cacheControl: '3600',
+                    cacheControl: '31536000, public, immutable',
                     upsert: false
                 });
 
@@ -67,7 +68,7 @@ const AddContent = () => {
 
     const onFinish = async (values) => {
         if (fileList.length === 0) {
-            message.warning("Please select at least one educational file (PDF)");
+            message.warning("Please select at least one educational file (PDF or DOCX)");
             return;
         }
 
@@ -75,36 +76,61 @@ const AddContent = () => {
         setUploadProgress(10);
 
         try {
-            const uploadPromises = fileList.map(file => uploadFileToStorage(file.originFileObj, values.class_level));
-            const uploadedFiles = await Promise.all(uploadPromises);
+            const totalFiles = fileList.length;
+            let completed = 0;
+            const errors = [];
 
-            setUploadProgress(70);
+            for (const fileObj of fileList) {
+                const file = fileObj.originFileObj;
+                try {
+                    const uploadedFile = await uploadFileToStorage(file, values.class_level);
 
-            const insertData = {
-                title: values.topic,
-                description: values.description || '',
-                category: isPremium ? 'paid_test_series' : values.category,
-                class_level: values.class_level,
-                subject: values.subject,
-                file_urls: uploadedFiles,
-                is_premium: isPremium,
-                paid_tier: isPremium ? values.paid_tier : 'none',
-                created_at: new Date().toISOString()
-            };
+                    const specificTitle = values.files?.[fileObj.uid]?.title;
+                    const fileTitle = specificTitle || (totalFiles > 1 ? file.name.replace(/\.[^/.]+$/, "") : (values.topic || file.name.replace(/\.[^/.]+$/, "")));
 
-            await supabaseApi.insert('topics', insertData);
+                    const specificSubject = values.files?.[fileObj.uid]?.subject;
+                    const fileSubject = isPremium ? 'General' : (specificSubject || values.subject || 'General');
 
-            setUploadProgress(100);
-            message.success({
-                content: "Resource Published Successfully!",
-                key: 'upload_msg',
-                duration: 5,
-                icon: <CheckCircleFilled style={{ color: '#52c41a' }} />
-            });
+                    const insertData = {
+                        title: fileTitle,
+                        description: values.description || '',
+                        category: isPremium ? 'paid_test_series' : values.category,
+                        class_level: values.class_level,
+                        subject: fileSubject,
+                        file_urls: [uploadedFile],
+                        is_premium: isPremium,
+                        paid_tier: isPremium ? values.paid_tier : 'none',
+                        created_at: new Date().toISOString()
+                    };
 
-            form.resetFields();
-            setFileList([]);
-            setIsPremium(false);
+                    await supabaseApi.insert('topics', insertData);
+                    completed++;
+                    setUploadProgress(10 + Math.round((completed / totalFiles) * 90));
+                } catch (err) {
+                    console.error(`Error processing ${file.name}:`, err);
+                    errors.push(`${file.name}: ${err.message || 'Unknown error'}`);
+                }
+            }
+
+            if (errors.length > 0) {
+                message.warning({
+                    content: `Completed ${completed}/${totalFiles}. Errors: ${errors.join(', ')}`,
+                    duration: 8
+                });
+            } else {
+                message.success({
+                    content: `${totalFiles} Resources Published Successfully!`,
+                    key: 'upload_msg',
+                    duration: 5,
+                    icon: <CheckCircleFilled style={{ color: '#52c41a' }} />
+                });
+            }
+
+            if (completed > 0) {
+                form.resetFields();
+                setFileList([]);
+                setIsPremium(false);
+            }
             setTimeout(() => setUploadProgress(0), 1000);
         } catch (error) {
             console.error("Critical Upload Error:", error);
@@ -118,7 +144,7 @@ const AddContent = () => {
     };
 
     return (
-        <div style={{ padding: '24px', maxWidth: 1000, margin: '0 auto' }}>
+        <div style={{ padding: '8px 0', maxWidth: 1000, margin: '0 auto' }}>
             <Card
                 title={
                     <Space>
@@ -135,7 +161,7 @@ const AddContent = () => {
                         <Form.Item name="is_premium_check" label="Premium Protection Control" valuePropName="checked" noStyle>
                             <Space direction="vertical" style={{ width: '100%' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontWeight: 700, fontSize: '15px', color: '#1d3557' }}>Mark as Protected Content</span>
+                                    <span style={{ fontWeight: 700, fontSize: '15px', color: '#1d3557' }}>Mark as Protected Content (Paid Test Series)</span>
                                     <Switch
                                         onChange={(val) => {
                                             setIsPremium(val);
@@ -146,14 +172,14 @@ const AddContent = () => {
                                 </div>
                                 <Text type="secondary" style={{ fontSize: '12px' }}>
                                     {isPremium
-                                        ? "This resource will be locked for the Paid Test Series section."
+                                        ? "This resource will be locked for the Paid Test Series section. Subject specification is optional."
                                         : "This resource will be available in the public Student Portal."}
                                 </Text>
                             </Space>
                         </Form.Item>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) minmax(200px, 1fr)', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                         <Form.Item
                             label="Target Class/Grade"
                             name="class_level"
@@ -186,29 +212,53 @@ const AddContent = () => {
                                 rules={[{ required: true, message: 'Category is mandatory' }]}
                             >
                                 <Select placeholder="Select Type" size="large">
-                                    {STUDY_CATEGORIES.map(c => <Option key={c.key} value={c.key}>{c.label}</Option>)}
+                                    {(class_level === '8th'
+                                        ? STUDY_CATEGORIES.filter(c => c.key === 'guess_paper')
+                                        : class_level === 'ecat'
+                                            ? STUDY_CATEGORIES.filter(c => ['assignments', 'solutions', 'tests'].includes(c.key))
+                                            : STUDY_CATEGORIES.filter(c => c.key !== 'paid_test_series')
+                                    ).map(cat => (
+                                        <Option key={cat.key} value={cat.key}>{cat.label}</Option>
+                                    ))}
                                 </Select>
                             </Form.Item>
                         )}
                     </div>
 
-                    <Form.Item
-                        label="Academic Subject"
-                        name="subject"
-                        rules={[{ required: true, message: 'Subject is mandatory' }]}
-                    >
-                        <Select placeholder="Select Subject" size="large">
-                            {STUDY_SUBJECTS.map(s => <Option key={s.key} value={s.key}>{s.label}</Option>)}
-                        </Select>
-                    </Form.Item>
+                    {!isPremium && (
+                        <Form.Item
+                            label="Default Academic Subject"
+                            name="subject"
+                            rules={[{ required: fileList.length === 0, message: 'Default Subject is mandatory' }]}
+                        >
+                            <Select placeholder="Select Default Subject" size="large">
+                                {(class_level === '8th'
+                                    ? STUDY_SUBJECTS.filter(s => ['English', 'Urdu', 'Mathematics', 'Science'].includes(s.key))
+                                    : class_level === 'ecat'
+                                        ? STUDY_SUBJECTS.filter(s => ['English', 'Computer Science', 'Chemistry', 'Mathematics', 'Physics'].includes(s.key))
+                                        : STUDY_SUBJECTS
+                                ).map(s => <Option key={s.key} value={s.key}>{s.label}</Option>)}
+                            </Select>
+                        </Form.Item>
+                    )}
 
-                    <Form.Item
-                        label="Resource Title"
-                        name="topic"
-                        rules={[{ required: true, message: 'Title is mandatory' }]}
-                    >
-                        <Input size="large" placeholder={isPremium ? "e.g. ECAT Full Term Test - 01" : "e.g. Unit 1 Numerical Problems"} />
-                    </Form.Item>
+                    {(fileList.length === 0 || fileList.length === 1) && (
+                        <Form.Item
+                            label={fileList.length > 1 ? "Shared Project Name (Optional)" : "Resource Title"}
+                            name="topic"
+                            rules={[{ required: fileList.length === 1, message: 'Title is mandatory' }]}
+                            style={{ display: fileList.length === 1 ? 'block' : 'none' }}
+                        >
+                            <Input size="large" placeholder={isPremium ? "e.g. ECAT Test Series" : "e.g. Unit 1 Numerical Problems"} />
+                        </Form.Item>
+                    )}
+                    {fileList.length > 1 && (
+                        <div style={{ marginBottom: 24 }}>
+                            <Text type="secondary" style={{ fontSize: '11px' }}>
+                                Multiple files detected. Please use the individual title fields below for each resource.
+                            </Text>
+                        </div>
+                    )}
 
                     {!isPremium && (
                         <Form.Item label="Contextual Description" name="description">
@@ -216,22 +266,65 @@ const AddContent = () => {
                         </Form.Item>
                     )}
 
-                    <Form.Item label="Academic Resource Files (PDF)" required>
+                    <Form.Item label="Academic Resource Files (PDF/DOCX)" required>
                         <Upload.Dragger
                             beforeUpload={() => false}
                             multiple
                             fileList={fileList}
                             onChange={({ fileList }) => setFileList(fileList)}
-                            accept=".pdf"
+                            accept=".pdf,.docx"
                             style={{ borderRadius: '15px', border: '2px dashed #e9ecef', padding: '20px' }}
                         >
                             <p className="ant-upload-drag-icon">
                                 <FilePdfOutlined style={{ color: '#ff4d4f' }} />
+                                <CrownOutlined style={{ color: '#1d3557', marginLeft: 8 }} />
                             </p>
-                            <p className="ant-upload-text" style={{ fontWeight: 700 }}>Click or Drag PDF files here</p>
-                            <p className="ant-upload-hint">Parallel processing enabled for high-speed uploads.</p>
+                            <p className="ant-upload-text" style={{ fontWeight: 700 }}>Click or Drag files here</p>
+                            <p className="ant-upload-hint">Supports PDF and DOCX. Parallel processing enabled.</p>
                         </Upload.Dragger>
                     </Form.Item>
+
+                    {fileList.length > 0 && (
+                        <div style={{ marginTop: 24, marginBottom: 24 }}>
+                            <Text strong style={{ fontSize: '16px', marginBottom: 16, display: 'block', color: '#1d3557' }}>Customize Individual Files</Text>
+                            {fileList.map((fileObj) => (
+                                <Card key={fileObj.uid} size="small" style={{ marginBottom: 12, borderRadius: '8px', background: '#f8fbff', border: '1px solid #e6f7ff' }}>
+                                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <div style={{ flex: '1 1 200px', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            <FilePdfOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                                            <Text strong>{fileObj.name}</Text>
+                                        </div>
+                                        <div style={{ flex: '2 1 200px' }}>
+                                            <Form.Item
+                                                name={['files', fileObj.uid, 'title']}
+                                                initialValue={fileObj.name.replace(/\.[^/.]+$/, "")}
+                                                style={{ marginBottom: 0 }}
+                                            >
+                                                <Input placeholder="Resource Title" />
+                                            </Form.Item>
+                                        </div>
+                                        {!isPremium && (
+                                            <div style={{ flex: '2 1 200px' }}>
+                                                <Form.Item
+                                                    name={['files', fileObj.uid, 'subject']}
+                                                    style={{ marginBottom: 0 }}
+                                                >
+                                                    <Select placeholder="Specific Subject (Overrides Default)" allowClear>
+                                                        {(class_level === '8th'
+                                                            ? STUDY_SUBJECTS.filter(s => ['English', 'Urdu', 'Mathematics', 'Science'].includes(s.key))
+                                                            : class_level === 'ecat'
+                                                                ? STUDY_SUBJECTS.filter(s => ['English', 'Computer Science', 'Chemistry', 'Mathematics', 'Physics'].includes(s.key))
+                                                                : STUDY_SUBJECTS
+                                                        ).map(s => <Option key={s.key} value={s.key}>{s.label}</Option>)}
+                                                    </Select>
+                                                </Form.Item>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
 
                     {uploading && <Progress percent={uploadProgress} status="active" style={{ marginBottom: 24 }} />}
 
@@ -251,7 +344,7 @@ const AddContent = () => {
                             boxShadow: '0 8px 15px rgba(0, 0, 0, 0.1)'
                         }}
                     >
-                        {uploading ? 'UPLOADING...' : 'PUBLISH RESOURCE'}
+                        {uploading ? 'UPLOADING...' : 'PUBLISH RESOURCES'}
                     </Button>
                 </Form>
             </Card>

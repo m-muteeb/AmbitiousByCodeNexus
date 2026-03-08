@@ -11,10 +11,9 @@ const ResultCard = ({ data }) => {
     const [isDownloading, setIsDownloading] = useState(false);
     const { student, session, summary, marks } = data;
 
-    // Filter valid marks (Ignore subjects with 0 or missing max_marks)
     // Filter valid marks (Ignore subjects with 0, missing, or non-numeric max_marks)
     const validMarks = marks.filter(m => {
-        const maxRaw = m.result_subjects?.max_marks;
+        const maxRaw = m.max_marks || m.result_subjects?.max_marks;
         if (!maxRaw) return false;
 
         // Ensure it contains only digits/numbers (allows decimals)
@@ -24,7 +23,7 @@ const ResultCard = ({ data }) => {
     });
 
     // Recalculate totals for display based on filtered marks
-    const displayedTotalMax = validMarks.reduce((sum, m) => sum + (m.result_subjects.max_marks || 0), 0);
+    const displayedTotalMax = validMarks.reduce((sum, m) => sum + (Number(m.max_marks) || Number(m.result_subjects?.max_marks) || 0), 0);
     const displayedTotalObtained = validMarks.reduce((sum, m) => sum + (m.obtained_marks || 0), 0);
     const displayedPercentage = displayedTotalMax > 0 ? ((displayedTotalObtained / displayedTotalMax) * 100).toFixed(2) : "0.00";
 
@@ -68,11 +67,12 @@ const ResultCard = ({ data }) => {
     };
 
     const getGrade = (percentage) => {
-        if (percentage >= 90) return "A+";
-        if (percentage >= 80) return "A";
-        if (percentage >= 70) return "B";
-        if (percentage >= 60) return "C";
-        if (percentage >= 50) return "D";
+        if (percentage >= 80) return "A+";
+        if (percentage >= 70) return "A";
+        if (percentage >= 60) return "B";
+        if (percentage >= 50) return "C";
+        if (percentage >= 40) return "D";
+        if (percentage >= 33) return "E";
         return "F";
     };
 
@@ -90,7 +90,7 @@ const ResultCard = ({ data }) => {
                         loading={isDownloading}
                         icon={!isDownloading && <DownloadOutlined />}
                         onClick={handleDownloadPDF}
-                        style={{ fontWeight: 800, borderRadius: '4px', height: '45px' }}
+                        style={{ fontWeight: 800, borderRadius: '8px', height: '45px', boxShadow: '0 4px 10px rgba(220, 53, 69, 0.2)' }}
                     >
                         {isDownloading ? "DOWNLOADING..." : "DOWNLOAD OFFICIAL CARD"}
                     </Button>
@@ -120,40 +120,43 @@ const ResultCard = ({ data }) => {
                     </div>
                 </div>
 
-                <table className="web-table">
-                    <thead>
-                        <tr>
-                            <th className="subject-name">SUBJECT</th>
-                            <th>TOTAL</th>
-                            <th>OBT</th>
-                            <th>%</th>
-                            <th>GRADE</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {validMarks.map((m) => {
-                            const p = ((m.obtained_marks / m.result_subjects.max_marks) * 100).toFixed(1);
-                            return (
-                                <tr key={m.id}>
-                                    <td className="subject-name">{m.result_subjects.name.toUpperCase()}</td>
-                                    <td>{m.result_subjects.max_marks}</td>
-                                    <td>{m.obtained_marks}</td>
-                                    <td>{p}%</td>
-                                    <td style={{ fontWeight: 800 }}>{getGrade(parseFloat(p))}</td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                    <tfoot>
-                        <tr className="web-summary-row">
-                            <td className="subject-name">TOTAL</td>
-                            <td>{displayedTotalMax}</td>
-                            <td>{displayedTotalObtained}</td>
-                            <td>{displayedPercentage}%</td>
-                            <td style={{ fontWeight: 900 }}>{overallGrade}</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div className="web-table-container">
+                    <table className="web-table">
+                        <thead>
+                            <tr>
+                                <th className="subject-name">SUBJECT</th>
+                                <th>TOTAL</th>
+                                <th>OBT</th>
+                                <th>%</th>
+                                <th>GRADE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {validMarks.map((m) => {
+                                const max = m.max_marks || m.result_subjects?.max_marks || 100;
+                                const p = ((m.obtained_marks / max) * 100).toFixed(1);
+                                return (
+                                    <tr key={m.id}>
+                                        <td className="subject-name">{m.result_subjects.name.toUpperCase()}</td>
+                                        <td>{max}</td>
+                                        <td>{m.obtained_marks}</td>
+                                        <td>{p}%</td>
+                                        <td style={{ fontWeight: 800 }}>{getGrade(parseFloat(p))}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                        <tfoot>
+                            <tr className="web-summary-row">
+                                <td className="subject-name">TOTAL</td>
+                                <td>{displayedTotalMax}</td>
+                                <td>{displayedTotalObtained}</td>
+                                <td>{displayedPercentage}%</td>
+                                <td style={{ fontWeight: 900 }}>{overallGrade}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
 
                 <div className="web-stats-footer" style={{ marginTop: '20px', fontSize: '1.2rem', fontWeight: 'bold' }}>
                     <div>POSITION: <span style={{ color: '#1d3557' }}>{summary.position || "N/A"}</span></div>
@@ -209,13 +212,14 @@ const ResultCard = ({ data }) => {
                         </thead>
                         <tbody>
                             {validMarks.map((m) => {
-                                const p = ((m.obtained_marks / m.result_subjects.max_marks) * 100).toFixed(1);
+                                const max = m.max_marks || m.result_subjects?.max_marks || 100;
+                                const p = ((m.obtained_marks / max) * 100).toFixed(1);
                                 const grade = getGrade(parseFloat(p));
                                 const remarks = grade === 'F' ? 'Fail' : (grade === 'A+' ? 'Excellent' : 'Pass');
                                 return (
                                     <tr key={m.id}>
                                         <td style={{ textAlign: 'left', paddingLeft: '10px', fontWeight: 'bold' }}>{m.result_subjects.name.toUpperCase()}</td>
-                                        <td>{m.result_subjects.max_marks}</td>
+                                        <td>{max}</td>
                                         <td>{m.obtained_marks}</td>
                                         <td>{p}%</td>
                                         <td style={{ fontWeight: 'bold' }}>{grade}</td>

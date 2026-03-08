@@ -125,7 +125,7 @@ const Footer = () => {
           <p className="fw-bold mb-0">
             Designed by{" "}
             <a
-              href="http://codenexusltd.netlify.app/"
+              href="http://codenexusltd.com"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: "red", fontWeight: "bold", textDecoration: "none" }}

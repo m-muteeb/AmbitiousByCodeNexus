@@ -26,7 +26,10 @@ const LoginPage = () => {
                     setError(error.message || 'Failed to login');
                 }
             } else {
-                if (profileData && (profileData.role === 'admin' || profileData.role === 'superadmin')) {
+                if (profileData && (profileData.role === 'admin' || profileData.role === 'student')) {
+                    // Both institutions (admin) and students now go to the institution page to view tests
+                    navigate('/institutionpage');
+                } else if (profileData && profileData.role === 'superadmin') {
                     navigate('/dashboard');
                 } else {
                     navigate('/');

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Input, Button, Select, Spin, Alert, message } from 'antd';
-import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { Input, Button, Select, Spin, Alert, message, Card } from 'antd';
+import { SearchOutlined, ArrowLeftOutlined, TrophyOutlined, ReadOutlined } from '@ant-design/icons';
 import { supabaseApi } from '../../config/supabase';
 import ResultCard from './ResultCard';
 import './ResultPortal.css';
@@ -17,6 +17,11 @@ const ResultSearch = () => {
     const [rollNumber, setRollNumber] = useState('');
     const [resultData, setResultData] = useState(null);
     const [error, setError] = useState(null);
+
+    // Ref for scrolling to result
+    const resultRef = useRef(null);
+    // Ref for scrolling back to available results / top manually
+    const topRef = useRef(null);
 
     // Initial load of sessions and classes
     useEffect(() => {
@@ -44,7 +49,10 @@ const ResultSearch = () => {
         }
     };
 
-    const handleSearch = async () => {
+    const handleSearch = async (e) => {
+        // Prevent form submission defaults if triggered by form
+        if (e && e.preventDefault) e.preventDefault();
+
         if (!selectedSession || !selectedClass || !rollNumber.trim()) {
             message.warning('Please complete all selection fields');
             return;
@@ -52,7 +60,7 @@ const ResultSearch = () => {
 
         setSearching(true);
         setError(null);
-        setResultData(null);
+        setResultData(null); // Clear previous result to force re-render
 
         try {
             // 1. Find Student in this class
@@ -87,46 +95,33 @@ const ResultSearch = () => {
             const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : 0;
 
             // 5. CALCULATE POSITION (Rank)
-            // Fetch ALL students in this class for this session to rank them
             let position = "N/A";
             try {
-                // A. Get all students in this class
                 const classStudents = await supabaseApi.fetch('result_students', `class_id=eq.${selectedClass}`);
                 const classStudentIds = classStudents.map(s => s.id);
 
                 if (classStudentIds.length > 0) {
-                    // B. Get all marks for these students in this session
-                    // Note: URL length limit might be hit if too many students. 
-                    // Ideally use RPC, but for now client-side is okay for small schools.
-                    // Optimization: Fetch marks filtering only by session_id, then filter by student_ids in JS if needed,
-                    // OR assuming session_id filter is strong enough.
                     const allSessionMarks = await supabaseApi.fetch('result_marks', `session_id=eq.${selectedSession}`);
-
-                    // Filter for only this class's students
                     const validMarks = allSessionMarks.filter(m => classStudentIds.includes(m.student_id));
-
-                    // C. Aggregate Totals
                     const studentTotals = {};
                     validMarks.forEach(m => {
                         if (!studentTotals[m.student_id]) studentTotals[m.student_id] = 0;
                         studentTotals[m.student_id] += (m.obtained_marks || 0);
                     });
 
-                    // D. Sort and Rank
                     const sortedTotals = Object.entries(studentTotals)
-                        .sort(([, scoreA], [, scoreB]) => scoreB - scoreA); // Descending
+                        .sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
 
                     const myRankIndex = sortedTotals.findIndex(([id]) => id === student.id);
                     if (myRankIndex !== -1) {
                         const rank = myRankIndex + 1;
-                        // Add ordinal suffix
                         const j = rank % 10,
                             k = rank % 100;
-                        if (j == 1 && k != 11) {
+                        if (j === 1 && k !== 11) {
                             position = rank + "st";
-                        } else if (j == 2 && k != 12) {
+                        } else if (j === 2 && k !== 12) {
                             position = rank + "nd";
-                        } else if (j == 3 && k != 13) {
+                        } else if (j === 3 && k !== 13) {
                             position = rank + "rd";
                         } else {
                             position = rank + "th";
@@ -157,8 +152,20 @@ const ResultSearch = () => {
 
             setResultData(formattedData);
 
-            // Scroll to top when result is displayed
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // MANUAL SCROLL Calculation for Mobile Reliability
+            setTimeout(() => {
+                if (resultRef.current) {
+                    // Mobile fix: Scroll explicitly to the Y-coordinate with offset
+                    // Offset handles sticky headers or padding
+                    const yCoordinate = resultRef.current.getBoundingClientRect().top + window.scrollY - 100;
+
+                    window.scrollTo({
+                        top: yCoordinate,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 300); // 300ms delay to ensure DOM paint
+
         } catch (err) {
             console.error('Search failure:', err);
             setError('System error while fetching results. Please try again.');
@@ -168,119 +175,168 @@ const ResultSearch = () => {
     };
 
     const handleReset = () => {
-        setRollNumber('');
         setResultData(null);
         setError(null);
+        setRollNumber('');
+
+        // Manual scroll back to top
+        setTimeout(() => {
+            if (topRef.current) {
+                const yCoordinate = topRef.current.getBoundingClientRect().top + window.scrollY - 80;
+                window.scrollTo({
+                    top: yCoordinate,
+                    behavior: 'smooth'
+                });
+            }
+        }, 100);
+    };
+
+    const handleSessionSelect = (sessionId) => {
+        setSelectedSession(sessionId);
+        if (resultData) {
+            setResultData(null);
+            setError(null);
+        }
     };
 
     return (
-        <div className="result-portal-container" style={{ width: '100%', padding: '20px 40px' }}>
-            <div className="result-search-wrapper" style={{ width: '100%', margin: '0 auto' }}>
+        <div className="result-portal-container" ref={topRef}>
+            <div className="portal-grid">
 
-                {/* Minimalist Search Container - No Card, Just Clean Layout */}
-                <div className="minimal-search-container">
-                    <div className="result-portal-header" style={{ textAlign: 'center', marginBottom: 40 }}>
-                        <h1 className="result-portal-title" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#1d3557', marginBottom: 10, letterSpacing: '-0.5px' }}>
-                            STUDENT RESULT PORTAL
-                        </h1>
-                        <p className="result-portal-subtitle" style={{ fontSize: '1rem', color: '#6c757d' }}>
-                            Enter your details below to verify your academic performance
-                        </p>
+                {/* --- SIDEBAR COLUMN --- */}
+                <div className="side-results-card">
+                    <div className="side-title">
+                        <ReadOutlined /> AVAILABLE RESULTS
                     </div>
 
-                    <div className="search-form">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30, marginBottom: 30 }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: 10, fontWeight: 700, color: '#495057', fontSize: '0.9rem' }}>ACADEMIC SESSION</label>
+                    <div className="results-list">
+                        {sessions.map((session, index) => (
+                            <div
+                                key={session.id}
+                                onClick={() => handleSessionSelect(session.id)}
+                                className={`result-list-item ${selectedSession === session.id ? 'active' : ''}`}
+                            >
+                                <div>
+                                    <div className="result-item-title">{session.name}</div>
+                                    <div className="result-item-meta">Click to Select</div>
+                                </div>
+                                {index === 0 && <span className="new-badge">NEW</span>}
+                            </div>
+                        ))}
+                        {sessions.length === 0 && !loading && (
+                            <div style={{ padding: '10px', color: '#999', fontSize: '0.9rem' }}>
+                                No results published yet.
+                            </div>
+                        )}
+                        {loading && (
+                            <div style={{ padding: '20px', textAlign: 'center' }}>
+                                <Spin size="small" />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* --- MAIN CONTENT COLUMN --- */}
+                <div className="main-content-area">
+                    <div className="main-header">
+                        <div className="welcome-text">
+                            <h1>STUDENT DASHBOARD</h1>
+                            <p>Select a session and enter your details to view results.</p>
+                        </div>
+                    </div>
+
+                    {/* ERROR ALERT */}
+                    {error && (
+                        <Alert
+                            message="Search Failed"
+                            description={error}
+                            type="error"
+                            showIcon
+                            closable
+                            onClose={() => setError(null)}
+                            style={{ marginBottom: 25, borderRadius: 8 }}
+                        />
+                    )}
+
+                    {/* SEARCH FORM (ALWAYS VISIBLE) */}
+                    <div className="search-card">
+                        <div className="search-card-header">
+                            <h2><TrophyOutlined style={{ marginRight: 8, color: '#e63946' }} />Find Your Result</h2>
+                            <p>Please enter your Class and Roll number below</p>
+                        </div>
+
+                        <div className="search-grid">
+                            <div className="search-full-width">
+                                <label className="form-label">Selected Session</label>
                                 <Select
-                                    placeholder="Select Session"
+                                    placeholder="Select Results Session"
                                     value={selectedSession}
-                                    onChange={setSelectedSession}
+                                    onChange={handleSessionSelect}
                                     loading={loading}
-                                    style={{ width: '100%', height: '50px' }}
-                                    size="large"
-                                    className="minimal-select"
+                                    style={{ width: '100%' }}
+                                    className="custom-select"
                                 >
                                     {sessions.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
                                 </Select>
                             </div>
+
                             <div>
-                                <label style={{ display: 'block', marginBottom: 10, fontWeight: 700, color: '#495057', fontSize: '0.9rem' }}>CLASS & SECTION</label>
+                                <label className="form-label">Class</label>
                                 <Select
                                     placeholder="Select Class"
                                     value={selectedClass}
                                     onChange={setSelectedClass}
                                     loading={loading}
-                                    style={{ width: '100%', height: '50px' }}
-                                    size="large"
-                                    className="minimal-select"
+                                    style={{ width: '100%' }}
                                 >
                                     {allClasses.map(c => <Option key={c.id} value={c.id}>{c.name} - {c.section}</Option>)}
                                 </Select>
                             </div>
+
+                            <div>
+                                <label className="form-label">Roll Number</label>
+                                <Input
+                                    placeholder="Roll #"
+                                    value={rollNumber}
+                                    onChange={e => setRollNumber(e.target.value)}
+                                    onPressEnter={handleSearch}
+                                />
+                            </div>
                         </div>
 
-                        <div style={{ marginBottom: 40 }}>
-                            <label style={{ display: 'block', marginBottom: 10, fontWeight: 700, color: '#495057', fontSize: '0.9rem' }}>ROLL NUMBER</label>
-                            <Input
-                                placeholder="Enter Roll Number"
-                                value={rollNumber}
-                                onChange={e => setRollNumber(e.target.value)}
-                                size="large"
-                                onPressEnter={handleSearch}
-                                style={{ height: '50px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '1.1rem' }}
-                            />
-                        </div>
-
-                        <div className="button-group" style={{ display: 'flex', gap: 15 }}>
-                            <Button
-                                type="primary"
-                                icon={<SearchOutlined />}
-                                onClick={handleSearch}
-                                loading={searching}
-                                size="large"
-                                style={{ flex: 2, height: 55, borderRadius: 8, fontWeight: 700, background: '#1d3557', fontSize: '1rem' }}
-                            >
-                                VIEW RESULT
-                            </Button>
-                            <Button
-                                onClick={handleReset}
-                                size="large"
-                                style={{ flex: 1, height: 55, borderRadius: 8, fontWeight: 600, color: '#6c757d', borderColor: '#ced4da' }}
-                            >
-                                CLEAR
-                            </Button>
-                            <Button
-                                icon={<ReloadOutlined />}
-                                onClick={loadInitialData}
-                                size="large"
-                                style={{ height: 55, borderRadius: 8, borderColor: '#ced4da' }}
-                            />
-                        </div>
+                        <Button
+                            type="primary"
+                            icon={<SearchOutlined />}
+                            onClick={handleSearch}
+                            loading={searching}
+                            block
+                            size="large"
+                        >
+                            VIEW RESULT
+                        </Button>
                     </div>
 
-                    {error && (
-                        <Alert
-                            message="Search Result"
-                            description={error}
-                            type="warning"
-                            showIcon
-                            style={{ marginTop: 30, borderRadius: 8 }}
-                        />
+                    {/* RESULT DISPLAY AREA (BELOW FORM) */}
+                    {searching && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '40px 0' }}>
+                            <Spin size="large" tip="Processing Result..." />
+                        </div>
+                    )}
+
+                    {resultData && !searching && (
+                        <div className="result-display-area" ref={resultRef} style={{ marginTop: 40, borderTop: '1px solid #eee', paddingTop: 40 }}>
+                            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                                <h2 style={{ color: '#1d3557', marginBottom: 5 }}>Result For {resultData.student.name}</h2>
+                                <p style={{ color: '#666' }}>{resultData.session.name}</p>
+                            </div>
+                            <ResultCard data={resultData} />
+
+                            <div style={{ textAlign: 'center', marginTop: 30 }}>
+                                <Button onClick={handleReset} size="large" danger>Clear & Search Again</Button>
+                            </div>
+                        </div>
                     )}
                 </div>
-
-                {searching && (
-                    <div className="loading-container" style={{ textAlign: 'center', marginTop: 40 }}>
-                        <Spin size="large" tip="Verifying credentials..." />
-                    </div>
-                )}
-
-                {resultData && (
-                    <div style={{ marginTop: 60 }}>
-                        <ResultCard data={resultData} />
-                    </div>
-                )}
             </div>
         </div>
     );

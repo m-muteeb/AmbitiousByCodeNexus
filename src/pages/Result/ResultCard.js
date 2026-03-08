@@ -59,11 +59,12 @@ const ResultCard = ({ data }) => {
     };
 
     const getGrade = (percentage) => {
-        if (percentage >= 90) return "A+";
-        if (percentage >= 80) return "A";
-        if (percentage >= 70) return "B";
-        if (percentage >= 60) return "C";
-        if (percentage >= 50) return "D";
+        if (percentage >= 80) return "A+";
+        if (percentage >= 70) return "A";
+        if (percentage >= 60) return "B";
+        if (percentage >= 50) return "C";
+        if (percentage >= 40) return "D";
+        if (percentage >= 33) return "E";
         return "F";
     };
 
@@ -122,28 +123,40 @@ const ResultCard = ({ data }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {marks.map((m) => {
-                            const p = ((m.obtained_marks / m.result_subjects.max_marks) * 100).toFixed(1);
-                            return (
-                                <tr key={m.id}>
-                                    <td className="subject-name">{m.result_subjects.name.toUpperCase()}</td>
-                                    <td>{m.result_subjects.max_marks}</td>
-                                    <td>{m.obtained_marks}</td>
-                                    <td>{p}%</td>
-                                    <td style={{ fontWeight: 800 }}>{getGrade(parseFloat(p))}</td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                    <tfoot>
-                        <tr className="web-summary-row">
-                            <td className="subject-name">OVERALL RESULT</td>
-                            <td>{summary.total_max}</td>
-                            <td>{summary.total_obtained}</td>
-                            <td>{summary.percentage}%</td>
-                            <td style={{ fontWeight: 900 }}>{overallGrade}</td>
-                        </tr>
-                    </tfoot>
+                        <tbody>
+                            {marks.map((m) => {
+                                // Use per-session max_marks, fallback to global subject max
+                                const max = m.max_marks || m.result_subjects?.max_marks || 100;
+                                const p = ((m.obtained_marks / max) * 100).toFixed(1);
+                                return (
+                                    <tr key={m.id}>
+                                        <td className="subject-name">{m.result_subjects.name.toUpperCase()}</td>
+                                        <td>{max}</td>
+                                        <td>{m.obtained_marks}</td>
+                                        <td>{p}%</td>
+                                        <td style={{ fontWeight: 800 }}>{getGrade(parseFloat(p))}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                        <tfoot>
+                            {/* Calculate Summary Dynamically to reflect per-session max marks */}
+                            {(() => {
+                                const totalObtained = marks.reduce((sum, m) => sum + m.obtained_marks, 0);
+                                const totalMax = marks.reduce((sum, m) => sum + (m.max_marks || m.result_subjects?.max_marks || 100), 0);
+                                const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : 0;
+
+                                return (
+                                    <tr className="web-summary-row">
+                                        <td className="subject-name">OVERALL RESULT</td>
+                                        <td>{totalMax}</td>
+                                        <td>{totalObtained}</td>
+                                        <td>{percentage}%</td>
+                                        <td style={{ fontWeight: 900 }}>{getGrade(percentage)}</td>
+                                    </tr>
+                                );
+                            })()}
+                        </tfoot>
                 </table>
 
                 <div className="web-stats-footer">
@@ -183,27 +196,39 @@ const ResultCard = ({ data }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {marks.map((m) => {
-                                    const p = ((m.obtained_marks / m.result_subjects.max_marks) * 100).toFixed(1);
-                                    return (
-                                        <tr key={m.id}>
-                                            <td className="subject-name" style={{ paddingLeft: '8px' }}>{m.result_subjects.name.toUpperCase()}</td>
-                                            <td>{m.result_subjects.max_marks}</td>
-                                            <td>{m.obtained_marks}</td>
-                                            <td>{p}%</td>
-                                            <td>{getGrade(parseFloat(p))}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
+                                <tbody>
+                                    {marks.map((m) => {
+                                        const max = m.max_marks || m.result_subjects?.max_marks || 100;
+                                        const p = ((m.obtained_marks / max) * 100).toFixed(1);
+                                        return (
+                                            <tr key={m.id}>
+                                                <td className="subject-name" style={{ paddingLeft: '8px' }}>{m.result_subjects.name.toUpperCase()}</td>
+                                                <td>{max}</td>
+                                                <td>{m.obtained_marks}</td>
+                                                <td>{p}%</td>
+                                                <td>{getGrade(parseFloat(p))}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
                         </table>
                     </div>
 
                     <div className="official-summary-stats">
-                        <span>TOTAL: {summary.total_obtained}/{summary.total_max}</span>
-                        <span>PERCENTAGE: {summary.percentage}%</span>
-                        <span>GRADE: {overallGrade}</span>
-                        <span>POSITION: {summary.position || "-"}</span>
+                        {(() => {
+                            const totalObtained = marks.reduce((sum, m) => sum + m.obtained_marks, 0);
+                            const totalMax = marks.reduce((sum, m) => sum + (m.max_marks || m.result_subjects?.max_marks || 100), 0);
+                            const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : 0;
+
+                            return (
+                                <>
+                                    <span>TOTAL: {totalObtained}/{totalMax}</span>
+                                    <span>PERCENTAGE: {percentage}%</span>
+                                    <span>GRADE: {getGrade(percentage)}</span>
+                                    <span>POSITION: {summary.position || "-"}</span>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     <div className="official-signatures">

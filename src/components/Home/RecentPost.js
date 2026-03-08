@@ -14,8 +14,9 @@ const RecentPosts = () => {
     const fetchRecentPosts = async () => {
         setLoading(true);
         try {
-            // Fetch top 5 recent topics with all necessary fields for navigation
-            const data = await supabaseApi.fetch('topics', 'select=title,created_at,class_level,subject,category&order=created_at.desc&limit=5');
+            // Fetch top 5 recent topics, excluding premium and institutional content
+            const queryData = `select=title,created_at,class_level,subject,category&is_premium=eq.false&category=neq.paid_test_series&order=created_at.desc&limit=5`;
+            const data = await supabaseApi.fetch('topics', queryData);
             setPosts(data || []);
         } catch (error) {
             console.error("Failed to fetch recent posts:", error);

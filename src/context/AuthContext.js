@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (error) {
-                return { error };
+                return { data: null, error };
             }
 
             if (data.user) {
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
 
             return { data: null, error: null };
         } catch (error) {
-            return { error };
+            return { data: null, error };
         }
     };
 
@@ -105,12 +105,12 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (error) {
-                return { error };
+                return { data: null, error };
             }
 
             return { data, error: null };
         } catch (error) {
-            return { error };
+            return { data: null, error };
         }
     };
 

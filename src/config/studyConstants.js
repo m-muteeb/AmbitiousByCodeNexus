@@ -1,4 +1,5 @@
 export const STUDY_CLASSES = [
+    { value: '8th', label: 'Class 8' },
     { value: '9th', label: 'Class 9' },
     { value: '10th', label: 'Class 10' },
     { value: '11th', label: 'Class 11' },
@@ -17,7 +18,7 @@ export const STUDY_SUBJECTS = [
     { key: 'Computer Science', label: 'Computer' },
     { key: 'Tarjma-tul-Quran', label: 'Tarjma-tul-Quran' },
     { key: 'Pak Studies', label: 'Pak-Studies' },
-    { key: 'ECAT-Prep', label: 'ECAT-Prep' },
+    { key: 'Science', label: 'Science' },
     { key: 'Scheme-of-Study', label: 'Scheme-of-Study' }
 ];
 
@@ -33,7 +34,10 @@ export const STUDY_CATEGORIES = [
     { key: 'ecat_unsolved_tests', label: 'ECAT Unsolved Tests' },
     { key: 'postmortem_series', label: 'Postmortem Series' },
     { key: 'book_lessons', label: 'Book Lessons' },
-    { key: 'paid_test_series', label: 'Paid Test Series' }
+    { key: 'paid_test_series', label: 'Paid Test Series' },
+    { key: 'assignments', label: 'Assignments' },
+    { key: 'solutions', label: 'Solutions' },
+    { key: 'tests', label: 'Tests' }
 ];
 
 export const STUDY_PAID_TIERS = [

@@ -87,4 +87,18 @@ export const supabaseApi = {
         }
         return true;
     },
+    async deleteByQuery(table, query) {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+        });
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+        }
+        return true;
+    },
 };

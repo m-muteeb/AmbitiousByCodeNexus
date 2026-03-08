@@ -10,7 +10,7 @@ export default function Header() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const isAdmin = profile && (profile.role === 'admin' || profile.role === 'superadmin');
+  const isSuperAdmin = profile && profile.role === 'superadmin';
 
   // Handle logout
   const handleLogout = async () => {
@@ -53,7 +53,7 @@ export default function Header() {
 
         {/* Right Section */}
         <div className="right-section" style={{ display: 'flex', gap: '10px' }}>
-          {isAdmin && (
+          {isSuperAdmin && (
             <Link to="/dashboard">
               <button className="sign-in-btn" style={{ background: '#1d3557' }}>Admin Panel</button>
             </Link>
@@ -86,7 +86,7 @@ export default function Header() {
 
           <Link to="/contact" onClick={handleLinkClick}>Contact Us</Link>
           {/* {!user && <Link to="/login" onClick={handleLinkClick}>Login</Link>} */}
-          {isAdmin && <Link to="/dashboard" onClick={handleLinkClick} style={{ fontWeight: 'bold' }}>Admin Dashboard</Link>}
+          {isSuperAdmin && <Link to="/dashboard" onClick={handleLinkClick} style={{ fontWeight: 'bold' }}>Admin Dashboard</Link>}
           {!user ? (
             <Link to="/auth/login" onClick={handleLinkClick}>
               <button className="sign-in-btn">Sign Up</button>
